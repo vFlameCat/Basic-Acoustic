@@ -7,28 +7,27 @@
 #include <vector>
 
 
-struct Box {
-
-    BoundingBox box;
-    Color color;
-};
-
-struct Sphere {
-
-    Vector3 center;
-    float radius;
-    Color color;
-};
-
-
 class Scene final {
 
 public:
 
+    struct Box {
+
+        BoundingBox bounds;
+        Color color;
+    };
+
+    struct Sphere {
+
+        Vector3 center;
+        float radius;
+        Color color;
+    };
+
     Scene ();
 
-    void addObject (const Box *box);
-    void addObject (const Sphere *sphere);
+    void addObject (Box box);
+    void addObject (Sphere sphere);
 
     void drawScene () const;
     void drawSceneBoxes () const;
@@ -40,6 +39,6 @@ public:
 
 private:
 
-    std::vector <const Box*> boxes_;
-    std::vector <const Sphere*> spheres_;
+    std::vector <Box> boxes_;
+    std::vector <Sphere> spheres_;
 };  

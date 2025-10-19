@@ -22,8 +22,8 @@ public:
 
 public:
 
-    Scene scene;
-    Camera camera;
+    Scene scene{};
+    Camera camera{};
 
     AcousticManager acousticManager;
 

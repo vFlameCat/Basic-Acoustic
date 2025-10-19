@@ -4,24 +4,12 @@
 Scene::Scene ():
   boxes_(), spheres_() {}
 
-void Scene::addObject (const Box *box) {
-
-    if (!box) {
-
-        std::cerr << "Warning! You have passed nullptr to addObject!\n";
-        return;
-    }
+void Scene::addObject (Box box) {
 
     boxes_.push_back(box);
 }
 
-void Scene::addObject (const Sphere *sphere) {
-
-    if (!sphere) {
-
-        std::cerr << "Warning! You have passed nullptr to addObject!\n";
-        return;
-    }
+void Scene::addObject (Sphere sphere) {
 
     spheres_.push_back(sphere);
 }
@@ -36,7 +24,7 @@ void Scene::drawSceneBoxes () const {
 
     for (size_t i = 0, size = boxes_.size(); i < size; ++i) {
 
-        const BoundingBox &box = boxes_[i]->box;
+        const BoundingBox &box = boxes_[i].bounds;
 
         Vector3 boxCenter = {
 
@@ -52,7 +40,7 @@ void Scene::drawSceneBoxes () const {
             box.max.z - box.min.z
         };
 
-        DrawCubeV(boxCenter, boxSize, boxes_[i]->color);
+        DrawCubeV(boxCenter, boxSize, boxes_[i].color);
         DrawCubeWiresV(boxCenter, boxSize, BLACK);
     }
 }
@@ -61,8 +49,8 @@ void Scene::drawSceneSpheres () const {
 
     for (size_t i = 0, size = spheres_.size(); i < size; ++i) {
 
-        DrawSphere(spheres_[i]->center, spheres_[i]->radius, spheres_[i]->color);
-        DrawSphereWires(spheres_[i]->center, spheres_[i]->radius, 16, 16, BLACK);
+        DrawSphere(spheres_[i].center, spheres_[i].radius, spheres_[i].color);
+        DrawSphereWires(spheres_[i].center, spheres_[i].radius, 16, 16, BLACK);
     }
 }
 
@@ -86,7 +74,7 @@ RayCollision Scene::getRayCollisionBoxes (Ray ray) const {
 
     for (size_t i = 0, size = boxes_.size(); i < size; ++i) {
 
-        RayCollision curCollision = GetRayCollisionBox(ray, boxes_[i]->box);
+        RayCollision curCollision = GetRayCollisionBox(ray, boxes_[i].bounds);
         if (curCollision.hit && \
             (!collision.hit || curCollision.distance < collision.distance)) {
 
@@ -103,7 +91,7 @@ RayCollision Scene::getRayCollisionSpheres (Ray ray) const {
 
     for (size_t i = 0, size = spheres_.size(); i < size; ++i) {
 
-        RayCollision curCollision = GetRayCollisionSphere(ray, spheres_[i]->center, spheres_[i]->radius);
+        RayCollision curCollision = GetRayCollisionSphere(ray, spheres_[i].center, spheres_[i].radius);
         if (curCollision.hit && \
             (!collision.hit || curCollision.distance < collision.distance)) {
 

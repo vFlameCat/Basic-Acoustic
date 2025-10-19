@@ -2,8 +2,6 @@
 
 
 Game::Game (int screenWidth, int screenHeight):
-  scene(),
-  camera(),
   acousticManager(&scene, &camera),
   screenWidth_(screenWidth),
   screenHeight_(screenHeight) {

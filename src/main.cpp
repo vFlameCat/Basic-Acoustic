@@ -1,69 +1,58 @@
 #include <raylib.h>
+#include <vector>
 
 #include "Game.hpp"
-#include "SceneSoundPlayer.hpp"
+#include "SoundPlayer.hpp"
 #include "AcousticManager.hpp"
+#include "math.hpp"
 
 
 int main () {
 
-    SampleManager samples[] = {
+    SoundStorage& soundStorage = SoundStorage::getInstance();
+    SoundPlayer &player = SoundPlayer::getInstance();
 
-        SampleManager("../resources/7NA.mp3"),
-        SampleManager("../resources/evil.mp3"),
-        SampleManager("../resources/hateyou.mp3"),
-        SampleManager("../resources/magister.mp3"),
-        SampleManager("../resources/radioactive.mp3"),
-        SampleManager("../resources/wellerman.mp3")
+    std::vector <std::string> soundPaths = {
+        "../resources/7NA.mp3",
+        "../resources/hateyou.mp3",
+        "../resources/magister.mp3",
+        "../resources/wellerman.mp3"
     };
-
-    SceneSoundPlayer player;
-    player.addSampleManager(&samples[0]);
-    player.addSampleManager(&samples[1]);
-    player.addSampleManager(&samples[2]);
-    player.addSampleManager(&samples[3]);
-    player.addSampleManager(&samples[4]);
-    player.addSampleManager(&samples[5]);
-
-
+    
 
     Game game(1280, 720);
-    
-    Box floorBox {
 
-        .box = BoundingBox{Vector3{-20.f, -1.f, -20.f}, Vector3{20.f, 0.f, 20.f}},
-        .color = LIGHTGRAY,
+    std::vector <Scene::Box> boxes = {
+
+        // floor
+        {
+         .bounds = BoundingBox{Vector3{-20.f, -1.f, -20.f}, Vector3{20.f, 0.f, 20.f}},
+         .color = LIGHTGRAY
+        },
+
+        // walls
+        {
+         .bounds = BoundingBox{Vector3{4.f, 0.f, 4.f}, Vector3{10.f, 10.f, 10.f}},
+         .color = MAGENTA
+        },
+        {
+         .bounds = BoundingBox{Vector3{-10.f, 0.f, 4.f}, Vector3{-4.f, 10.f, 10.f}},
+         .color = MAGENTA
+        },
+        {
+         .bounds = BoundingBox{Vector3{4.f, 0.f, -10.f}, Vector3{10.f, 10.f, -4.f}},
+         .color = MAGENTA
+        },
+        {
+         .bounds = BoundingBox{Vector3{-10.f, 0.f, -10.f}, Vector3{-4.f, 10.f, -4.f}},
+         .color = MAGENTA
+        }
     };
-
-
-    Box walls[] = {
-        {
-         .box = BoundingBox{Vector3{4.f, 0.f, 4.f}, Vector3{10.f, 10.f, 10.f}},
-         .color = MAGENTA
-        },
-        {
-         .box = BoundingBox{Vector3{-10.f, 0.f, 4.f}, Vector3{-4.f, 10.f, 10.f}},
-         .color = MAGENTA
-        },
-        {
-         .box = BoundingBox{Vector3{4.f, 0.f, -10.f}, Vector3{10.f, 10.f, -4.f}},
-         .color = MAGENTA
-        },
-        {
-         .box = BoundingBox{Vector3{-10.f, 0.f, -10.f}, Vector3{-4.f, 10.f, -4.f}},
-         .color = MAGENTA
-        },
-    };
     
 
-    Sphere sounds[] = {
+    std::vector <Scene::Sphere> spheres = {
         {
             .center = Vector3{0.f, 1.f, 0.f},
-            .radius = 1.f,
-            .color  = SKYBLUE,
-        },
-        {
-            .center = Vector3{7.f, 3.f, 12.f},
             .radius = 1.f,
             .color  = SKYBLUE,
         },
@@ -73,7 +62,7 @@ int main () {
             .color  = SKYBLUE,
         },
         {
-            .center = Vector3{12.f, 3.f, -7.f},
+            .center = Vector3{7.f, 3.f, 12.f},
             .radius = 1.f,
             .color  = SKYBLUE,
         },
@@ -82,36 +71,46 @@ int main () {
             .radius = 1.f,
             .color  = SKYBLUE,
         },
-        {
-            .center = Vector3{-12.f, 3.f, 7.f},
-            .radius = 1.f,
-            .color  = SKYBLUE,
-        },
+        // {
+        //     .center = Vector3{12.f, 3.f, -7.f},
+        //     .radius = 1.f,
+        //     .color  = SKYBLUE,
+        // },
+        // {
+        //     .center = Vector3{-12.f, 3.f, 7.f},
+        //     .radius = 1.f,
+        //     .color  = SKYBLUE,
+        // },
     };
 
-    game.scene.addObject(&floorBox);
-    game.scene.addObject(&walls[0]);
-    game.scene.addObject(&walls[1]);
-    game.scene.addObject(&walls[2]);
-    game.scene.addObject(&walls[3]);
+    
+    for (auto box: boxes) {
 
-    game.scene.addObject(&sounds[0]);
-    game.scene.addObject(&sounds[1]);
-    game.scene.addObject(&sounds[2]);
-    game.scene.addObject(&sounds[3]);
-    game.scene.addObject(&sounds[4]);
-    game.scene.addObject(&sounds[5]);
+        game.scene.addObject(box);
+    }
+
+    for (auto sphere: spheres) {
+
+        game.scene.addObject(sphere);
+    }
 
 
-    game.acousticManager.addSoundSource(SoundSource{sounds[0].center, &samples[0]});
-    game.acousticManager.addSoundSource(SoundSource{sounds[1].center, &samples[1]});
-    game.acousticManager.addSoundSource(SoundSource{sounds[2].center, &samples[2]});
-    game.acousticManager.addSoundSource(SoundSource{sounds[3].center, &samples[3]});
-    game.acousticManager.addSoundSource(SoundSource{sounds[4].center, &samples[4]});
-    game.acousticManager.addSoundSource(SoundSource{sounds[5].center, &samples[5]});
+    std::vector <SoundStorage::SoundHandle> samples;
+    for (const auto& soundPath: soundPaths) {
+
+        SoundStorage::SoundHandle handle = soundStorage.loadSound(soundPath); 
+
+        samples.push_back(handle);
+        player.addStaticPlayer(PlayCursor::CreateInfo{.volume = 0.f, .soundHandle = handle});  
+    }
+
+    for (size_t i = 0; i < samples.size(); ++i) {
+
+        game.acousticManager.addSoundSource(AcousticManager::SoundSource{spheres[i].center, samples[i]});
+    }
 
 
+
+    player.startPlayer();
     game.run();
-
-    return 0;
 }
