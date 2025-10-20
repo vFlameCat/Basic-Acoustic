@@ -3,23 +3,7 @@
 
 #include <cmath>
 #include <numbers>
-
-
-float getDistance (Vector3 pointA, Vector3 pointB) {
-
-    float diffX = pointB.x - pointA.x;
-    float diffY = pointB.y - pointA.y;
-    float diffZ = pointB.z - pointA.z;
-
-    return std::sqrt(diffX * diffX + diffY * diffY + diffZ * diffZ);
-}
-
-Vector3 normalize (Vector3 vec) {
-
-    float len = getDistance(Vector3{0, 0, 0}, vec);
-
-    return Vector3{vec.x / len, vec.y / len, vec.z / len};
-}
+#include <Vector3.hpp>
 
 
 AcousticManager::AcousticManager (const Scene *scene, const Camera *camera):
@@ -53,13 +37,13 @@ void AcousticManager::checkSourcesVisibility () const {
 
     for (const auto& [key, source]: sources_) {
 
-        float distanceToSource = getDistance(camera_->position, source.position);
+        fc::Vector3f camPos(camera_->position), sourcePos(source.position);
 
-        Vector3 rayDir = Vector3{source.position.x - camera_->position.x,
-                                 source.position.y - camera_->position.y,
-                                 source.position.z - camera_->position.z};
+        float distanceToSource = fc::distance(camPos, sourcePos);
 
-        RayCollision collision = scene_->getRayCollisionBoxes(Ray{camera_->position, normalize(rayDir)});
+        fc::Vector3f dirToSource = sourcePos - camPos;
+
+        RayCollision collision = scene_->getRayCollisionBoxes(Ray{camera_->position, dirToSource.normalize()});
 
         PlayCursor& player = SoundPlayer::getInstance().getStaticPlayer(source.playerHandle);
 
@@ -71,12 +55,86 @@ void AcousticManager::checkSourcesVisibility () const {
 
             player.volume = 1.f;
         }
+
+        // if (collision.hit && collision.distance < distanceToSource) {
+
+        //     //player.volume = 0.f;
+        // }
+        // else {
+
+        //     //player.volume = 1.f;
+        //     PlayCursor newPlayer(player);
+        //     newPlayer.volume = 1.f;
+        //     SoundPlayer::getInstance().addOneShotPlayer(newPlayer);
+        // }
     }
 }
 
 void AcousticManager::listenAroundCam () const {
 
     std::vector <Ray> rays = genRaysAroundCam(32);      // no need to generate every frame
+
+    for (auto ray: rays) {
+
+        traceSoundSources(ray);
+    }
+}
+
+void AcousticManager::traceSoundSources (Ray ray, int depth) const {
+
+    Ray curRay = ray;
+
+    double curPosOffset = 0.;
+    float curVolume = 1.f;
+
+    for (int curDepth = 0; curDepth < depth; ++curDepth) {
+
+        for (const auto& [key, source]: sources_) {
+
+            fc::Vector3f rayPos(curRay.position), sourcePos(source.position);
+
+            float distanceToSource = fc::distance(rayPos, sourcePos);
+
+            fc::Vector3f dirToSource = sourcePos - rayPos;
+            RayCollision collisionToSource = scene_->getRayCollisionBoxes(Ray{rayPos, dirToSource.normalize()});
+
+            if (!collisionToSource.hit || distanceToSource < collisionToSource.distance) {
+
+                PlayCursor::CreateInfo info = SoundPlayer::getInstance().getStaticPlayer(source.playerHandle).getInfo();
+                info.posOffset = curPosOffset + calcPosOffsetDelta(collisionToSource.distance);
+                info.volume = curVolume * calcVolumeDelta(collisionToSource.distance);
+
+                SoundPlayer::getInstance().addOneShotPlayer(PlayCursor(info));
+            }
+        }
+
+        RayCollision collision = scene_->getRayCollisionBoxes(curRay);
+        if (!collision.hit) {
+
+            break;
+        }
+
+        fc::Vector3f incidentDir = curRay.direction;
+        fc::Vector3f reflectDir = incidentDir - 2 * incidentDir.dot(collision.normal) * fc::Vector3f(collision.normal);
+
+        curRay.position = fc::Vector3f(collision.point) + reflectDir * 0.001f;
+        curRay.direction = reflectDir;
+
+        curPosOffset += calcPosOffsetDelta(collision.distance);
+
+        curVolume *= 0.6f;      // volume decrease because of reflection
+        curVolume *= calcVolumeDelta(collision.distance);
+    }
+}
+
+double AcousticManager::calcPosOffsetDelta (float distanceDelta) const {
+
+    return distanceDelta / SoundSpeed * 48000;
+}
+
+float  AcousticManager::calcVolumeDelta (float distanceDelta) const {
+
+    return 1.f / (distanceDelta * distanceDelta);
 }
 
 std::vector <Ray> AcousticManager::genRaysAroundCam (int numRays) const {
@@ -90,8 +148,8 @@ std::vector <Ray> AcousticManager::genRaysAroundCam (int numRays) const {
 
     for (int i = 0; i < numRays; ++i) {
 
-        float theta = 2 * std::numbers::pi * i / goldenRatio;
-        float phi = std::acos(1.0f - 2.0f * (i + 0.5f) / numRays);
+        float theta = 2 * static_cast<float>(std::numbers::pi) * static_cast<float>(i) / goldenRatio;
+        float phi = std::acos(1.0f - 2.0f * (static_cast<float>(i) + 0.5f) / static_cast<float>(numRays));
         
         fc::Vector3f dir (
 

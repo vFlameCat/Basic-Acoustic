@@ -23,6 +23,8 @@ public:
 
     PlayCursor (CreateInfo info);
 
+    CreateInfo getInfo () const;
+
     float getSample () const;
     void advance ();
 

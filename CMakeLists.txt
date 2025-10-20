@@ -1,8 +1,5 @@
 cmake_minimum_required(VERSION 3.28)
 
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
 # Set the project name. This is not the executable program's name!
 project(graphical_template)
 
@@ -38,7 +35,7 @@ if (EMSCRIPTEN)
 endif ()
 
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic -Wno-unused-parameter \
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++23 -Wall -Wextra -Wpedantic -Wno-unused-parameter \
                                         -Wshadow -Wredundant-decls -Wcast-align -Wundef -Wfloat-equal \
                                         -Winline -Wmissing-include-dirs -Weffc++ -Wmain -Wcast-qual \
                                         -Wconversion -Wctor-dtor-privacy -Wformat-security -Wlogical-op \

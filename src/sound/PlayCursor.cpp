@@ -19,6 +19,18 @@ PlayCursor::PlayCursor (CreateInfo info):
 }
 
 
+PlayCursor::CreateInfo PlayCursor::getInfo () const {
+
+    return CreateInfo{
+        .pos         = pos_,
+        .posOffset   = posOffset_,
+        .pitch       = pitch,
+        .volume      = volume,
+        .soundHandle = soundHandle_,
+        .isLooped    = isLooped_, 
+    };
+}
+
 // (1) lerp between two closest samples to the pos_ + posOffset_
 // (2) for performance purposes assuemes that pos_ + posOffset_ 
 //     won't change more thant on SoundStorage::getInstance().getSound(soundHandle).size()

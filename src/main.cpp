@@ -16,7 +16,6 @@ int main () {
         "../resources/7NA.mp3",
         "../resources/hateyou.mp3",
         "../resources/magister.mp3",
-        "../resources/wellerman.mp3"
     };
     
 
@@ -56,11 +55,11 @@ int main () {
             .radius = 1.f,
             .color  = SKYBLUE,
         },
-        {
-            .center = Vector3{0.f, -2.f, 0.f},
-            .radius = 1.f,
-            .color  = SKYBLUE,
-        },
+        // {
+        //     .center = Vector3{0.f, -2.f, 0.f},
+        //     .radius = 1.f,
+        //     .color  = SKYBLUE,
+        // },
         {
             .center = Vector3{7.f, 3.f, 12.f},
             .radius = 1.f,

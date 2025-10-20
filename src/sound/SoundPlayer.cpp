@@ -6,6 +6,7 @@
 SoundPlayer::SoundPlayer () {
 
     initDevice();
+    players_.oneShotPlayers.reserve(64);    // maybe change 
 }
 
 SoundPlayer::~SoundPlayer () {

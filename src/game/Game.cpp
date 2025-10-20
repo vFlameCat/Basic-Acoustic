@@ -28,11 +28,16 @@ void Game::run () {
 
     DisableCursor(); 
 
+    //acousticManager.listenAroundCam();
+
     while (!WindowShouldClose()) {
 
         UpdateCamera(&camera, CAMERA_FREE);
 
+        SoundPlayer::getInstance().clearOneShotPlayers();
+
         acousticManager.checkSourcesVisibility();
+        //acousticManager.listenAroundCam();
 
         drawScene();
     }

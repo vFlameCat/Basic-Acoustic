@@ -75,13 +75,13 @@ constexpr Vector3<T> Vector3<T>::componentWiseDiv (const Vector3 &rhs) const {
 // compatibility with raylib methods start
 
 template <>
+constexpr Vector3f::Vector3 (::Vector3 vec): x(vec.x), y(vec.y), z(vec.z) {}
+
+template <>
 constexpr Vector3f::operator ::Vector3 () const {
 
     return ::Vector3(x, y, z);
 }
-
-template <>
-constexpr Vector3f::Vector3 (::Vector3 vec): x(vec.x), y(vec.y), z(vec.z) {}
 
 // compatibility with raylib methods end
 
