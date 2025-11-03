@@ -62,7 +62,6 @@ void AcousticManager::listenAroundCam () const {
 
     SoundPlayer& player = SoundPlayer::getInstance();
 
-    player.staticPlayers.syncReadBuf();
     for (const auto& [key, source]: sources_) {
 
         fc::Vector3f rayPos(camera_->position), sourcePos(source.position);
@@ -72,16 +71,8 @@ void AcousticManager::listenAroundCam () const {
         fc::Vector3f dirToSource = sourcePos - rayPos;
         RayCollision collisionToSource = scene_->getRayCollisionBoxes(Ray{rayPos, dirToSource.normalize()});
 
-        // if (!collisionToSource.hit || distanceToSource < collisionToSource.distance) {
-
-        //     PlayCursor::CreateInfo info = player.staticPlayers.getPlayer(source.playerHandle).getInfo();
-        //     info.posOffset = calcPosOffset(distanceToSource);
-        //     info.volume = calcVolume(distanceToSource);
-
-        //     player.oneShotPlayers.addPlayer(PlayCursor(info));
-        // }
-
-        PlayCursor::CreateInfo info = player.staticPlayers.getPlayer(source.playerHandle).getInfo();
+        SoundPlayer::DynamicPlayerCreateInfo info;
+        info.playerHandle = source.playerHandle;
         info.posOffset = calcPosOffset(distanceToSource);
         info.volume = calcVolume(distanceToSource);
 
@@ -90,7 +81,7 @@ void AcousticManager::listenAroundCam () const {
             info.volume *= 0.1f;
         }
 
-        player.oneShotPlayers.addPlayer(PlayCursor(info));
+        player.addDynamicPlayCursor(info);
     }
 
     std::vector <Ray> rays = genRaysAroundCam(32);      // no need to generate every frame
@@ -99,7 +90,7 @@ void AcousticManager::listenAroundCam () const {
         traceSoundSources(ray, 10);
     }
 
-    player.oneShotPlayers.syncWriteBuf();
+    player.dispatchDynamicPlayCursors();
 }
 
 void AcousticManager::traceSoundSources (Ray ray, int depth) const {
@@ -139,12 +130,13 @@ void AcousticManager::traceSoundSources (Ray ray, int depth) const {
 
             if (!collisionToSource.hit || distanceToSource < collisionToSource.distance) {
 
-                PlayCursor::CreateInfo info = player.staticPlayers.getPlayer(source.playerHandle).getInfo();
-                info.posOffset = calcPosOffset(curDistanceToListener + distanceToSource);
-                info.volume = calcVolume(curDistanceToListener + distanceToSource);
+                SyncDynamicPlayCursors::DynamicPlayerCreateInfo info;
+                info.playerHandle = source.playerHandle;
+                info.posOffset = calcPosOffset(distanceToSource);
+                info.volume = calcVolume(distanceToSource);
                 info.volume *= curVolumeDecr;
 
-                player.oneShotPlayers.addPlayer(PlayCursor(info));
+                player.addDynamicPlayCursor(info);
             }
         }
     }

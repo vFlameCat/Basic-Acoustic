@@ -1,81 +1,76 @@
 #pragma once
 
 
+#include <cstdint>
 #include <mutex>
-
-#include "PlayCursor.hpp"
-
-
-class SoundPlayer;
+#include <PlayCursor.hpp>
 
 
-class SyncStaticPlayers {
+class AudioRenderer;
+
+
+class SyncStaticPlayCursors {
 
 public:
 
-    friend class SoundPlayer;
+    friend class AudioRenderer;
 
-    using PlayerHandle = int;
 
-    SyncStaticPlayers ();
+    using PlayCursorHandle = std::uint64_t;
+    static constexpr PlayCursorHandle INVALID_PLAYER_HANDLE = 0;
 
-    // currently not thread safe at runtime
-    PlayerHandle addPlayer (PlayCursor player);
 
-    // in each frame it is wrong to call getPlayer before calling syncReadBuf
-    PlayCursor& getPlayer (PlayerHandle handle) &;
-    PlayCursor getPlayer (PlayerHandle handle) const &;
+    SyncStaticPlayCursors () {};
 
-    // currently not thread safe at runtime
-    void removePlayer (PlayerHandle handle);
-
-    void syncModifyBuf ();
-    void syncReadBuf ();
-
-    std::unordered_map <PlayerHandle, PlayCursor> modifyBuf_{};
+    PlayCursorHandle addPlayCursor (PlayCursor playCursor);
+    PlayCursor& getPlayCursor (PlayCursorHandle handle) &;
+    void removePlayCursor (PlayCursorHandle handle);
 
 private:
 
-    PlayerHandle nextHandle_ = 1;
+    PlayCursorHandle nextHandle_ = 1;
 
-    // contains PlayCursors that changes in sound thread
+    std::unordered_map <PlayCursorHandle, PlayCursor> playCursors_{};
 
-    std::unordered_map <PlayerHandle, PlayCursor> swapBuf_{};
-
-    // dump storage for main thread to get info from
-    std::unordered_map <PlayerHandle, PlayCursor> readBuf_{};
-
-    bool isSwapReady = false;
-
-    std::mutex playersSync_{};
+    std::mutex playCursorsSync_{};
 };
 
 
 
-class SyncOneShotPlayers {
+class SyncDynamicPlayCursors {
 
 public:
 
-    friend class SoundPlayer;
+    struct DynamicPlayerCreateInfo {
 
-    SyncOneShotPlayers ();
+        SyncStaticPlayCursors::PlayCursorHandle playerHandle = SyncStaticPlayCursors::INVALID_PLAYER_HANDLE;
+        double posOffset = 0.;
+        float volume = 0.f;
+    };
 
-    void addPlayer (PlayCursor player);
+public:
 
-    void syncWriteBuf ();
-    void syncReadBuf ();
+    friend class AudioRenderer;
+
+
+    SyncDynamicPlayCursors () {};
+
+    void addPlayCursor (PlayCursor playCursor);
+    void addPlayCursor (DynamicPlayerCreateInfo info);
+
+    void dispatch ();
+    void recieve ();
 
 private:
+
+    // buffer for sound thread to read from
+    std::vector <PlayCursor> playCursors_{};
+
+    std::vector <PlayCursor> swapBuf_{};
 
     // buffer for main thread to fill
     std::vector <PlayCursor> writeBuf_{};
 
-    std::vector <PlayCursor> swapBuf_{};
-
-    // buffer for sound thread to read from
-    std::vector <PlayCursor> readBuf_{};
-
     bool isSwapReady = false;
-
-    std::mutex playersSync_{};
+    std::mutex playCursorsSync_{};
 };

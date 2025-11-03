@@ -36,8 +36,8 @@ endif ()
 
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Ofast -std=c++23 -Wall -Wextra -Wpedantic -Wno-unused-parameter \
-                                        -Wshadow -Wredundant-decls -Wcast-align -Wundef -Wfloat-equal \
-                                        -Winline -Wmissing-include-dirs -Weffc++ -Wmain -Wcast-qual \
+                                        -Wshadow -Wredundant-decls -Wcast-align -Wundef \
+                                        -Wmissing-include-dirs -Weffc++ -Wmain -Wcast-qual \
                                         -Wconversion -Wctor-dtor-privacy -Wformat-security -Wlogical-op \
                                         -Wnon-virtual-dtor -Woverloaded-virtual -Wpointer-arith \
                                         -Wstrict-aliasing -Wstrict-null-sentinel -Wwrite-strings -Wno-comment")

@@ -1,78 +1,64 @@
 #include "SyncPlayers.hpp"
-
-
 #include <iostream>
+#include <SoundPlayer.hpp>
 
-SyncStaticPlayers::SyncStaticPlayers () {};
 
+SyncStaticPlayCursors::PlayCursorHandle SyncStaticPlayCursors::addPlayCursor (PlayCursor playCursor) {
 
-SyncStaticPlayers::PlayerHandle SyncStaticPlayers::addPlayer (PlayCursor player) {
+    std::lock_guard<std::mutex> sync(playCursorsSync_);
 
-    modifyBuf_.emplace(nextHandle_, player);
+    playCursors_.emplace(nextHandle_, playCursor);
 
     return nextHandle_++;
 }
 
-PlayCursor& SyncStaticPlayers::getPlayer (PlayerHandle handle) & {
+PlayCursor& SyncStaticPlayCursors::getPlayCursor (PlayCursorHandle handle) & {
 
-    return readBuf_.at(handle);
+    std::lock_guard<std::mutex> sync(playCursorsSync_);
+
+    return playCursors_.at(handle);
 }
 
-PlayCursor SyncStaticPlayers::getPlayer (PlayerHandle handle) const & {
+void SyncStaticPlayCursors::removePlayCursor (PlayCursorHandle handle) {
 
-    return readBuf_.at(handle);
-}
+    std::lock_guard<std::mutex> sync(playCursorsSync_);
 
-void SyncStaticPlayers::removePlayer (PlayerHandle handle) {
-
-    modifyBuf_.erase(handle);
-}
-
-
-void SyncStaticPlayers::syncModifyBuf () {
-
-    std::lock_guard<std::mutex> sync(playersSync_);
-
-    swapBuf_ = modifyBuf_;
-    isSwapReady = true;
-}
-
-void SyncStaticPlayers::syncReadBuf () {
-
-    std::lock_guard<std::mutex> sync(playersSync_);
-
-    if (isSwapReady) {
-
-        readBuf_.swap(swapBuf_);
-        isSwapReady = false;
-    }
+    playCursors_.erase(handle);
 }
 
 
 
-SyncOneShotPlayers::SyncOneShotPlayers () {}
 
-void SyncOneShotPlayers::addPlayer (PlayCursor player) {
+void SyncDynamicPlayCursors::addPlayCursor (PlayCursor playCursor) {
 
-    writeBuf_.push_back(player);
+    writeBuf_.push_back(playCursor);
 }
 
-void SyncOneShotPlayers::syncWriteBuf () {
+void SyncDynamicPlayCursors::addPlayCursor (DynamicPlayerCreateInfo info) {
 
-    std::lock_guard<std::mutex> sync(playersSync_);
+    PlayCursor::CreateInfo playerInfo = SoundPlayer::getInstance().getStaticPlayCursor(info.playerHandle).getInfo();
+    playerInfo.posOffset += info.posOffset;
+    playerInfo.volume = info.volume;
+
+    writeBuf_.push_back(playerInfo);
+}
+
+void SyncDynamicPlayCursors::dispatch () {
+
+    std::lock_guard<std::mutex> sync(playCursorsSync_);
 
     writeBuf_.swap(swapBuf_);
     isSwapReady = true;
     writeBuf_.clear();
 }
 
-void SyncOneShotPlayers::syncReadBuf () {
+void SyncDynamicPlayCursors::recieve () {
 
-    std::lock_guard<std::mutex> sync(playersSync_);
+    std::lock_guard<std::mutex> sync(playCursorsSync_);
 
     if (isSwapReady) {
 
-        readBuf_.swap(swapBuf_);
+        playCursors_.swap(swapBuf_);
         isSwapReady = false;
     }
 }

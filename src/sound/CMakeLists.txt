@@ -3,6 +3,7 @@ target_sources(${MAIN_TARGET} PRIVATE AcousticManager.cpp)
 target_sources(${MAIN_TARGET} PRIVATE SoundPlayer.cpp)
 target_sources(${MAIN_TARGET} PRIVATE PlayCursor.cpp)
 target_sources(${MAIN_TARGET} PRIVATE SyncPlayers.cpp)
+target_sources(${MAIN_TARGET} PRIVATE AudioRenderer.cpp)
 
 add_subdirectory(miniaudio)
 target_link_libraries(${MAIN_TARGET} PRIVATE miniaudio)

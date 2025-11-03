@@ -6,58 +6,6 @@
 #include <cmath>
 
 
-namespace {
-
-float applySoftLimiting (float sample) {
-
-    if (sample > 1.0f) {
-
-        return 1.0f - (1.0f / (sample + 1.0f));
-    } 
-    else if (sample < -1.0f) {
-
-        return -1.0f + (1.0f / (-sample + 1.0f));
-    }
-    return sample;
-}
-
-
-float applyLimiting (float sample) {
-
-    static float threshold_ = 0.9f;
-    static float release_ = 0.999f; 
-    static float envelope_ = 0.0f;
-
-    float absSample = std::abs(sample);
-    if (absSample > threshold_) {
-
-        envelope_ = std::max(envelope_ * release_, absSample);
-        float gainReduction = threshold_ / envelope_;
-        sample *= gainReduction;
-    } 
-    else {
-
-        envelope_ *= release_;
-    }
-    
-    return applySoftLimiting(sample);
-}
-
-
-struct CallbackData {
-
-    SyncStaticPlayers &staticPlayers;
-    SyncOneShotPlayers &oneShotPlayers;
-};
-
-    
-}
-
-
-
-std::mutex oneShotPlayerSync;
-
-
 SoundPlayer::SoundPlayer () {
 
     initDevice();  
@@ -80,43 +28,11 @@ void SoundPlayer::callbackPlayer (ma_device* pDevice, void* pOutput, const void*
         return;
     }
 
-    SyncStaticPlayers &staticPlayers = data->staticPlayers;
-    SyncOneShotPlayers &oneShotPlayers = data->oneShotPlayers;
+    data->audioRenderer.renderAudio(static_cast<float*>(pOutput), frameCount);
 
-
-    oneShotPlayers.syncReadBuf();
-
-
-    for (auto& player: oneShotPlayers.readBuf_) {
-
-        player.pos_ = staticPlayers.modifyBuf_.at(1).pos_;
-    }
-
-    for (ma_uint32 i = 0; i < frameCount; ++i) {
-
-        *(static_cast<float*>(pOutput) + i) = 0;
-
-        for (auto& player: oneShotPlayers.readBuf_) {
-
-            *(static_cast<float*>(pOutput) + i) += player.getSample();
-            player.advance();
-        }
-
-        for (auto& [handle, player]: staticPlayers.modifyBuf_) {
-
-            *(static_cast<float*>(pOutput) + i) += player.getSample();
-            player.advance();
-        } 
-    }
-
-
-    staticPlayers.syncModifyBuf();
-
-
-    // auto end = std::chrono::high_resolution_clock::now();
-    // auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-    // std::cout << "Players number: " << oneShotPlayers.readBuf_.size() << std::endl;
-    // std::cout << "Callback duration: " << duration.count() << " microseconds\n";
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    std::cout << "Callback duration: " << duration.count() << " microseconds\n";
 }
 
 SoundPlayer& SoundPlayer::getInstance () {
@@ -148,12 +64,42 @@ void SoundPlayer::switchPlayer () {
 }
 
 
+SoundPlayer::PlayCursorHandle SoundPlayer::addStaticPlayCursor (PlayCursor staticPlayCursor) {
+
+    return audioRenderer.staticPlayCursors.addPlayCursor(staticPlayCursor);
+}
+
+PlayCursor& SoundPlayer::getStaticPlayCursor (PlayCursorHandle handle) & {
+
+    return audioRenderer.staticPlayCursors.getPlayCursor(handle);
+}
+
+void SoundPlayer::removeStaticPlayCursor (PlayCursorHandle handle) {
+
+    audioRenderer.staticPlayCursors.removePlayCursor(handle);
+}
+
+void SoundPlayer::addDynamicPlayCursor (PlayCursor dynamicPlayCursor) {
+
+    audioRenderer.dynamicPlayCursors.addPlayCursor(dynamicPlayCursor);
+}
+
+void SoundPlayer::addDynamicPlayCursor (DynamicPlayerCreateInfo info) {
+
+    audioRenderer.dynamicPlayCursors.addPlayCursor(info);
+}
+
+void SoundPlayer::dispatchDynamicPlayCursors () {
+
+    audioRenderer.dynamicPlayCursors.dispatch();
+}
+
+
 void SoundPlayer::initDevice () {
 
     static CallbackData data {
 
-        .staticPlayers = staticPlayers,
-        .oneShotPlayers = oneShotPlayers,
+        .audioRenderer = audioRenderer,
     };
 
     ma_device_config config = ma_device_config_init(ma_device_type_playback);

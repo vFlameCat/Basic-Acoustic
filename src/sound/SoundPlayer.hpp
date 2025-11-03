@@ -10,14 +10,19 @@
 #include "miniaudio.hpp"
 #include "SoundStorage.hpp"
 #include "PlayCursor.hpp"
-#include "SyncPlayers.hpp"
+#include <AudioRenderer.hpp>
 
 
 class SoundPlayer final {
 
 public:
 
-    using PlayerHandle = SyncStaticPlayers::PlayerHandle;
+    using PlayCursorHandle = SyncStaticPlayCursors::PlayCursorHandle;
+    static constexpr PlayCursorHandle INVALID_PLAYER_HANDLE = SyncStaticPlayCursors::INVALID_PLAYER_HANDLE;
+
+    using DynamicPlayerCreateInfo = SyncDynamicPlayCursors::DynamicPlayerCreateInfo;
+
+public:
 
     SoundPlayer (const SoundPlayer&) = delete;
     SoundPlayer& operator= (const SoundPlayer&) = delete;
@@ -32,8 +37,13 @@ public:
     void stopPlayer ();
     void switchPlayer ();
 
-    SyncStaticPlayers staticPlayers{};
-    SyncOneShotPlayers oneShotPlayers{};
+    PlayCursorHandle addStaticPlayCursor (PlayCursor staticPlayCursor);
+    PlayCursor& getStaticPlayCursor (PlayCursorHandle handle) &;
+    void removeStaticPlayCursor (PlayCursorHandle handle);
+
+    void addDynamicPlayCursor (PlayCursor dynamicPlayCursor);
+    void addDynamicPlayCursor (DynamicPlayerCreateInfo info);
+    void dispatchDynamicPlayCursors ();
 
 private:
 
@@ -41,8 +51,15 @@ private:
 
     void initDevice ();
 
+    struct CallbackData {
+
+        AudioRenderer &audioRenderer;
+    };
+
 private:
 
     ma_device device_{};
     bool isDevicePlaying_ = false;
+
+    AudioRenderer audioRenderer{};
 };

@@ -15,11 +15,11 @@ public:
     struct SoundSource {
 
         Vector3 position;
-        SoundPlayer::PlayerHandle playerHandle;
+        SyncStaticPlayCursors::PlayCursorHandle playerHandle;
     };  
 
-    using SoundSourceHandle = int;
-    static constexpr SoundSourceHandle INVALID_SOUND_SOURCE_HANDLE = -1;
+    using SoundSourceHandle = uint64_t;
+    static constexpr SoundSourceHandle INVALID_SOUND_SOURCE_HANDLE = 0;
 
     static constexpr float SoundSpeed = 343.f;
 

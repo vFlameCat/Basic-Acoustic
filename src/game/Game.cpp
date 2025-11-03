@@ -28,9 +28,6 @@ void Game::run () {
 
     DisableCursor(); 
 
-    // acousticManager.listenAroundCam();
-    // SoundPlayer::getInstance().swapOneShotPlayers();
-
     while (!WindowShouldClose()) {
 
         UpdateCamera(&camera, CAMERA_FREE);

@@ -129,10 +129,10 @@ int main () {
 
 
     SoundPlayer &player = SoundPlayer::getInstance();
-    std::vector <SoundPlayer::PlayerHandle> playerHandles;
+    std::vector <SoundPlayer::PlayCursorHandle> playerHandles;
     for (auto handle: samples) {
 
-        SoundPlayer::PlayerHandle playerH = player.staticPlayers.addPlayer(PlayCursor::CreateInfo{.volume = 0.f, .soundHandle = handle});  
+        SoundPlayer::PlayCursorHandle playerH = player.addStaticPlayCursor(PlayCursor::CreateInfo{.volume = 0.f, .soundHandle = handle});  
         playerHandles.push_back(playerH);
     }
 

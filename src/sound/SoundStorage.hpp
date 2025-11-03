@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <cstdint>
 #include <unordered_map>
 
 #include "miniaudio.hpp"
@@ -12,8 +13,8 @@ class SoundStorage final {
 
 public:
 
-    using SoundHandle = int;
-    static constexpr SoundHandle INVALID_SOUND_HANDLE = -1;
+    using SoundHandle = std::uint64_t;
+    static constexpr SoundHandle INVALID_SOUND_HANDLE = 0;
 
     class Sound {
 
