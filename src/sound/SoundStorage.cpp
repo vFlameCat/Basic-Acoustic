@@ -82,7 +82,7 @@ int SoundStorage::decodeAndLoadFloatSamples (const std::string &samplePath, std:
 
         std::cerr << "An error occured during loading sound: " + samplePath + " !\n";
         return -1;
-    }
+    }    
 
     return 0;
 }

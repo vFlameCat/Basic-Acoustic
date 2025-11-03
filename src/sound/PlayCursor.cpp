@@ -36,12 +36,6 @@ PlayCursor::CreateInfo PlayCursor::getInfo () const {
 //     won't change more thant on SoundStorage::getInstance().getSound(soundHandle).size()
 float PlayCursor::getSample () const {
 
-    if (SoundStorage::getInstance().getSound(soundHandle_).size() == 0) {
-
-        std::cerr << "Error! Invalid sound!\n";
-        return 0.f;
-    }
-
     if (!isLooped_) {
 
         return getSampleInUnloopedSound();
@@ -56,6 +50,8 @@ float PlayCursor::getSampleInLoopedSound () const {
     std::size_t size = samples.size();
 
     double advance = pos_ + posOffset_;
+
+    //return samples[std::floor(advance)] * volume;
 
     if (advance < 0) {
 

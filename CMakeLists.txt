@@ -35,7 +35,7 @@ if (EMSCRIPTEN)
 endif ()
 
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++23 -Wall -Wextra -Wpedantic -Wno-unused-parameter \
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Ofast -std=c++23 -Wall -Wextra -Wpedantic -Wno-unused-parameter \
                                         -Wshadow -Wredundant-decls -Wcast-align -Wundef -Wfloat-equal \
                                         -Winline -Wmissing-include-dirs -Weffc++ -Wmain -Wcast-qual \
                                         -Wconversion -Wctor-dtor-privacy -Wformat-security -Wlogical-op \

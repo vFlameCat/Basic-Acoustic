@@ -32,7 +32,7 @@ public:
     SoundSource& getSoundSource (SoundSourceHandle sourceHandle);
     void removeSoundSource (SoundSourceHandle sourceHandle);    
 
-    void checkSourcesVisibility () const;
+    //void checkSourcesVisibility () const;
 
     void listenAroundCam () const;
 
@@ -40,8 +40,8 @@ private:
 
     void traceSoundSources (Ray ray, int depth = 10) const;
 
-    double calcPosOffsetDelta (float distanceDelta) const;
-    float  calcVolumeDelta (float distanceDelta) const;
+    double calcPosOffset (double distance) const;
+    float  calcVolume (float distance) const;
 
     std::vector <Ray> genRaysAroundCam (int numRays) const;
 

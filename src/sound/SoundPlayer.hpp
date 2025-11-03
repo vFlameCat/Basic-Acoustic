@@ -5,18 +5,19 @@
 #include <string_view>
 #include <unordered_map>
 #include <vector>
+#include <mutex>
 
 #include "miniaudio.hpp"
 #include "SoundStorage.hpp"
 #include "PlayCursor.hpp"
+#include "SyncPlayers.hpp"
 
 
 class SoundPlayer final {
 
 public:
 
-    using PlayerHandle = int;
-    static constexpr PlayerHandle INVALID_PLAYER_HANDLE = -1;
+    using PlayerHandle = SyncStaticPlayers::PlayerHandle;
 
     SoundPlayer (const SoundPlayer&) = delete;
     SoundPlayer& operator= (const SoundPlayer&) = delete;
@@ -31,12 +32,8 @@ public:
     void stopPlayer ();
     void switchPlayer ();
 
-    PlayerHandle addStaticPlayer (PlayCursor player);
-    PlayCursor& getStaticPlayer (PlayerHandle playerHandle);
-    void removeStaticPlayer (PlayerHandle playerHandle);
-
-    void addOneShotPlayer (PlayCursor player);
-    void clearOneShotPlayers ();
+    SyncStaticPlayers staticPlayers{};
+    SyncOneShotPlayers oneShotPlayers{};
 
 private:
 
@@ -46,16 +43,6 @@ private:
 
 private:
 
-    struct Players {
-
-        std::unordered_map <SoundStorage::SoundHandle, PlayCursor> staticPlayers{};
-        std::vector <PlayCursor> oneShotPlayers{};
-    };
-
-    PlayerHandle nextHandle_ = 1;
-
     ma_device device_{};
-    bool isPlaying_ = false;
-
-    Players players_{};
+    bool isDevicePlaying_ = false;
 };

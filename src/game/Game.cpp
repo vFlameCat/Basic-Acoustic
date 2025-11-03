@@ -10,8 +10,8 @@ Game::Game (int screenWidth, int screenHeight):
 
     camera = Camera {
 
-        .position = Vector3{-3.f, 1.f, 0.f},
-        .target   = Vector3{0.f, 1.f, 0.f},
+        .position = Vector3{-3.f, -2.f, 0.f},
+        .target   = Vector3{0.f, -2.f, 0.f},
         .up       = Vector3{0.f, 1.f, 0.f},
         .fovy     = 90.f,
 
@@ -28,16 +28,14 @@ void Game::run () {
 
     DisableCursor(); 
 
-    //acousticManager.listenAroundCam();
+    // acousticManager.listenAroundCam();
+    // SoundPlayer::getInstance().swapOneShotPlayers();
 
     while (!WindowShouldClose()) {
 
         UpdateCamera(&camera, CAMERA_FREE);
 
-        SoundPlayer::getInstance().clearOneShotPlayers();
-
-        acousticManager.checkSourcesVisibility();
-        //acousticManager.listenAroundCam();
+        acousticManager.listenAroundCam();
 
         drawScene();
     }

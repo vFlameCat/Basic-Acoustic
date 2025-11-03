@@ -33,17 +33,17 @@ public:
     float pitch;
     float volume;
 
+    double pos_;
+    double posOffset_;
+
+    SoundStorage::SoundHandle soundHandle_;
+
 private:
 
     float getSampleInLoopedSound () const;
     float getSampleInUnloopedSound () const;
 
 private:
-
-    double pos_;
-    double posOffset_;
-
-    SoundStorage::SoundHandle soundHandle_;
 
     bool isLooped_;
 };
