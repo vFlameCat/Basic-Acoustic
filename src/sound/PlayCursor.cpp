@@ -10,6 +10,7 @@ PlayCursor::PlayCursor (CreateInfo info):
   pos_        (info.pos),
   posOffset_  (info.posOffset),
   soundHandle_(info.soundHandle),
+  samples_    (SoundStorage::getInstance().getSound(info.soundHandle)),
   isLooped_   (info.isLooped) {
 
     if (soundHandle_ == SoundStorage::INVALID_SOUND_HANDLE) {
@@ -46,13 +47,9 @@ float PlayCursor::getSample () const {
 
 float PlayCursor::getSampleInLoopedSound () const {
 
-    const SoundStorage::Sound &samples = SoundStorage::getInstance().getSound(soundHandle_);
-    std::size_t size = samples.size();
+    std::size_t size = samples_.size();
 
     double advance = pos_ + posOffset_;
-
-    //return samples[std::floor(advance)] * volume;
-
     if (advance < 0) {
 
         advance += static_cast<double>(size);
@@ -63,36 +60,26 @@ float PlayCursor::getSampleInLoopedSound () const {
         advance -= static_cast<double>(size);
     }
 
-    std::size_t id = static_cast<std::size_t>(std::floor(advance));
-    std::size_t nextId = (id + 1) % size;
+    std::size_t flooredAdvance = static_cast<std::size_t>(advance);     // correct due to advance >= 0.
+    float t = static_cast<float>(advance - flooredAdvance);
 
-    float t = static_cast<float>(advance - std::floor(advance));
-
-    return std::lerp(samples[id], samples[nextId], t) * volume;
+    return std::lerp(samples_[flooredAdvance], samples_[flooredAdvance + 1], t) * volume;
 }
 
 float PlayCursor::getSampleInUnloopedSound () const {
 
-    const SoundStorage::Sound &samples = SoundStorage::getInstance().getSound(soundHandle_);
-    std::size_t size = samples.size();
+    std::size_t size = samples_.size();
 
     double advance = pos_ + posOffset_;
-
-    if (advance < 0. || advance > static_cast<double>(size)) {
+    if (advance < 0. || advance >= static_cast<double>(size)) {
 
         return 0.f;
     }
 
-    std::size_t id = static_cast<std::size_t>(std::floor(advance));
-    std::size_t nextId = id + 1;
-    if (nextId >= size) {
-
-        return samples[id] * volume;
-    }
-
+    std::size_t flooredAdvance = static_cast<std::size_t>(advance);     // correct due to advance >= 0.
     float t = static_cast<float>(advance - std::floor(advance));
 
-    return std::lerp(samples[id], samples[nextId], t) * volume;
+    return std::lerp(samples_[flooredAdvance], samples_[flooredAdvance + 1], t) * volume;
 }
 
 void PlayCursor::advance () {

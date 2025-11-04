@@ -20,7 +20,7 @@ float SoundStorage::Sound::at (std::size_t pos) const {
 
 std::size_t SoundStorage::Sound::size () const {
 
-    return samples_.size();
+    return samples_.size() - 1;
 }
 
 
@@ -77,12 +77,13 @@ int SoundStorage::decodeAndLoadFloatSamples (const std::string &samplePath, std:
         return -1;
     }
 
-    samples.resize(frameCount);
+    samples.resize(frameCount + 1);
     if (ma_decoder_read_pcm_frames(&decoder, samples.data(), frameCount, nullptr) != MA_SUCCESS) {
 
         std::cerr << "An error occured during loading sound: " + samplePath + " !\n";
         return -1;
     }    
+    samples[frameCount] = samples[0];   // so we can process looped sounds more effectively
 
     return 0;
 }

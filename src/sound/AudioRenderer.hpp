@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <mutex>
 #include <unordered_map>
-#include <vector>
+#include <array>
 #include <SyncPlayers.hpp>
 
 
@@ -12,7 +12,7 @@ class AudioRenderer final {
 
 public:
 
-    AudioRenderer () {};
+    AudioRenderer ();
 
     void renderAudio (float *pOutput, uint32_t frameCount);
 
@@ -31,5 +31,6 @@ private:
     void renderStaticPlayCursorsWithoutAdvance  (float *pOutput, uint32_t frameCount);
     void renderDynamicPlayCursorsWithoutAdvance (float *pOutput, uint32_t frameCount);
 
-    std::vector <float> buf_{};
+    static constexpr uint32_t OVERLAP_BUF_SIZE = 500;
+    std::array <float, OVERLAP_BUF_SIZE> overlapBuf_{};
 };

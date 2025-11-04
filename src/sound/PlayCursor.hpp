@@ -45,5 +45,7 @@ private:
 
 private:
 
+    const SoundStorage::Sound &samples_;
+
     bool isLooped_;
 };

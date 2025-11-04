@@ -22,8 +22,12 @@ public:
 
         Sound (std::vector <float> &&samples);
         
+        // it is correct to take pos + 1 for any correct pos! (for looped sound processing performance)
+        // the last sample is equal to the first
         float operator[] (std::size_t pos) const;
         float at (std::size_t pos) const;
+
+        //returns sample's real size
         std::size_t size () const;
 
     private:

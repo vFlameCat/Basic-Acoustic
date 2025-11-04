@@ -2,35 +2,33 @@
 #include <cstring>
 
 
+AudioRenderer::AudioRenderer () {
+
+    overlapBuf_.fill(0.f);
+}
+
 void AudioRenderer::renderAudio (float *pOutput, uint32_t frameCount) {
 
-    const uint32_t overlapSize = frameCount / 2;
-    
-    buf_.resize(overlapSize);
-    
-    std::vector<float> tempBuffer(frameCount + overlapSize, 0.f);
-    renderWithoutAdvance(tempBuffer.data(), frameCount + overlapSize);
+    dynamicPlayCursors.recieve();
 
-    for (auto& [handle, playCursor]: staticPlayCursors.playCursors_) {
+    const uint32_t overlapCount = frameCount / 2;
 
-        playCursor.pos_ += playCursor.pitch * frameCount;
+    render(pOutput, frameCount);
+
+    for (uint32_t i = 0; i < overlapCount; ++i) {
+
+        float fadeIn = static_cast<float>(i) / overlapCount;
+        float fadeOut = 1.f - fadeIn;
+
+        pOutput[i] = overlapBuf_[i] * fadeOut + pOutput[i] * fadeIn;
     }
 
-    for (auto& playCursor: dynamicPlayCursors.playCursors_) {
-
-        playCursor.pos_ += playCursor.pitch * frameCount;
-    }
-    
-    for (uint32_t i = 0; i < overlapSize; ++i) {
-        tempBuffer[i] += buf_[i];
-        tempBuffer[i] *= 0.5;
-    }
-    
-    memcpy(pOutput, tempBuffer.data(), frameCount * sizeof(float));
-    memcpy(buf_.data(), tempBuffer.data() + frameCount, overlapSize * sizeof(float));
+    renderWithoutAdvance(overlapBuf_.data(), overlapCount);
 }
 
 void AudioRenderer::render (float *pOutput, uint32_t frameCount) {
+
+    memset(pOutput, 0.f, frameCount * sizeof(float));
 
     renderStaticPlayCursors(pOutput, frameCount);
     renderDynamicPlayCursors(pOutput, frameCount);
@@ -52,8 +50,6 @@ void AudioRenderer::renderStaticPlayCursors (float *pOutput, uint32_t frameCount
 
 void AudioRenderer::renderDynamicPlayCursors (float *pOutput, uint32_t frameCount) {
 
-    dynamicPlayCursors.recieve();
-
     for (auto& playCursor: dynamicPlayCursors.playCursors_) {
 
         for (uint32_t i = 0; i < frameCount; ++i) {
@@ -65,6 +61,8 @@ void AudioRenderer::renderDynamicPlayCursors (float *pOutput, uint32_t frameCoun
 }
 
 void AudioRenderer::renderWithoutAdvance (float *pOutput, uint32_t frameCount) {
+
+    memset(pOutput, 0.f, frameCount * sizeof(float));
 
     renderStaticPlayCursorsWithoutAdvance(pOutput, frameCount);
     renderDynamicPlayCursorsWithoutAdvance(pOutput, frameCount);
@@ -87,8 +85,6 @@ void AudioRenderer::renderStaticPlayCursorsWithoutAdvance (float *pOutput, uint3
 }
 
 void AudioRenderer::renderDynamicPlayCursorsWithoutAdvance (float *pOutput, uint32_t frameCount) {
-
-    dynamicPlayCursors.recieve();
 
     for (auto& playCursor: dynamicPlayCursors.playCursors_) {
         
