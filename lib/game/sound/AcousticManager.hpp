@@ -5,7 +5,6 @@
 
 #include "Scene.hpp"
 #include "SoundPlayer.hpp"
-#include "Vector3.hpp"
 
 
 class AcousticManager final {

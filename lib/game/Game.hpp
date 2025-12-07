@@ -2,9 +2,8 @@
 
 
 #include <raylib.h>
-
-#include "Scene.hpp"
-#include "AcousticManager.hpp"
+#include <Scene.hpp>
+#include <AcousticManager.hpp>
 
 
 class Game final {

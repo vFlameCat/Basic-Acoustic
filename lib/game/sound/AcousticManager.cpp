@@ -1,9 +1,8 @@
 #include "AcousticManager.hpp"
-#include "Vector3.hpp"
 
+#include <Vector3.hpp>
 #include <cmath>
 #include <numbers>
-#include <Vector3.hpp>
 
 
 AcousticManager::AcousticManager (const Scene *scene, const Camera *camera):

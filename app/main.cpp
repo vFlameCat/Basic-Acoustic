@@ -4,7 +4,6 @@
 #include "Game.hpp"
 #include "SoundPlayer.hpp"
 #include "AcousticManager.hpp"
-#include "math.hpp"
 
 
 int main () {    
