@@ -1,67 +1,28 @@
-#include "AcousticManager.hpp"
+#include "SimulationManager.hpp"
+#include "SyncPlayers.hpp"
 
 #include <Vector3.hpp>
 #include <cmath>
 #include <numbers>
+#include <AudioPlayer.hpp>
+#include <iostream>
 
 
-AcousticManager::AcousticManager (const Scene *scene, const Camera *camera):
+SimulationManager::SimulationManager (const Scene *scene, const Camera *camera):
   scene_(scene),
   camera_(camera) {
 
     if (!scene_ || !camera_) {
 
-        std::cerr << "Error! Invalid Arguments in AcousticManager Ctor\n";
+        std::cerr << "Error! Invalid Arguments in SimulationManager Ctor\n";
     }
 }
 
-AcousticManager::SoundSourceHandle AcousticManager::addSoundSource (SoundSource source) {
+void SimulationManager::listenAroundCam () const {
 
-    sources_.emplace(nextHandle_, source);
+    AudioPlayer& player = AudioPlayer::getInstance();
 
-    return nextHandle_++;
-}
-
-AcousticManager::SoundSource& AcousticManager::getSoundSource (SoundSourceHandle sourceHandle) {
-
-    return sources_.at(sourceHandle);
-}
-
-void AcousticManager::removeSoundSource (SoundSourceHandle sourceHandle) {
-
-    sources_.erase(sourceHandle);
-}
-
-// void AcousticManager::checkSourcesVisibility () const {
-
-//     for (const auto& [key, source]: sources_) {
-
-//         fc::Vector3f camPos(camera_->position), sourcePos(source.position);
-
-//         float distanceToSource = fc::distance(camPos, sourcePos);
-
-//         fc::Vector3f dirToSource = sourcePos - camPos;
-
-//         RayCollision collision = scene_->getRayCollisionBoxes(Ray{camera_->position, dirToSource.normalize()});
-
-//         PlayCursor& player = SoundPlayer::getInstance().staticPlayers.getPlayer(source.playerHandle);
-
-//         if (collision.hit && collision.distance < distanceToSource) {
-
-//             player.volume = 0.f;
-//         }
-//         else {
-
-//             player.volume = 1.f;
-//         }
-//     }
-// }
-
-void AcousticManager::listenAroundCam () const {
-
-    SoundPlayer& player = SoundPlayer::getInstance();
-
-    for (const auto& [key, source]: sources_) {
+    for (const auto &source: audioSources) {
 
         fc::Vector3f rayPos(camera_->position), sourcePos(source.position);
 
@@ -70,8 +31,8 @@ void AcousticManager::listenAroundCam () const {
         fc::Vector3f dirToSource = sourcePos - rayPos;
         RayCollision collisionToSource = scene_->getRayCollisionBoxes(Ray{rayPos, dirToSource.normalize()});
 
-        SoundPlayer::DynamicPlayerCreateInfo info;
-        info.playerHandle = source.playerHandle;
+        SyncDynamicPlayCursors::DynamicPlayerCreateInfo info;
+        info.playerHandle = source.handle;
         info.posOffset = calcPosOffset(distanceToSource);
         info.volume = calcVolume(distanceToSource);
 
@@ -80,26 +41,25 @@ void AcousticManager::listenAroundCam () const {
             info.volume *= 0.1f;
         }
 
-        player.addDynamicPlayCursor(info);
+        player.getDynamicPlayCursors().addPlayCursor(info);
     }
 
     std::vector <Ray> rays = genRaysAroundCam(32);      // no need to generate every frame
     for (auto ray: rays) {
 
-        traceSoundSources(ray, 10);
+        traceAudioSources(ray, 10);
     }
 
-    player.dispatchDynamicPlayCursors();
+    player.getDynamicPlayCursors().dispatch();
 }
 
-void AcousticManager::traceSoundSources (Ray ray, int depth) const {
+void SimulationManager::traceAudioSources (Ray ray, int depth) const {
 
     Ray curRay = ray;
 
-    float curDistanceToListener = 0.f;
     float curVolumeDecr = 1.f;
 
-    SoundPlayer& player = SoundPlayer::getInstance();
+    AudioPlayer& player = AudioPlayer::getInstance();
 
     for (int curDepth = 0; curDepth < depth; ++curDepth) {
 
@@ -115,10 +75,9 @@ void AcousticManager::traceSoundSources (Ray ray, int depth) const {
         curRay.position = fc::Vector3f(collision.point) + reflectDir * 0.1f;
         curRay.direction = reflectDir;
 
-        curDistanceToListener += collision.distance;
         curVolumeDecr *= 0.6f;
 
-        for (const auto& [key, source]: sources_) {
+        for (const auto &source: audioSources) {
 
             fc::Vector3f rayPos(curRay.position), sourcePos(source.position);
 
@@ -130,28 +89,28 @@ void AcousticManager::traceSoundSources (Ray ray, int depth) const {
             if (!collisionToSource.hit || distanceToSource < collisionToSource.distance) {
 
                 SyncDynamicPlayCursors::DynamicPlayerCreateInfo info;
-                info.playerHandle = source.playerHandle;
+                info.playerHandle = source.handle;
                 info.posOffset = calcPosOffset(distanceToSource);
                 info.volume = calcVolume(distanceToSource);
                 info.volume *= curVolumeDecr;
 
-                player.addDynamicPlayCursor(info);
+                player.getDynamicPlayCursors().addPlayCursor(info);
             }
         }
     }
 }
 
-double AcousticManager::calcPosOffset (double distance) const {
+double SimulationManager::calcPosOffset (double distance) const {
 
     return -distance / SoundSpeed * 48000;
 }
 
-float  AcousticManager::calcVolume (float distance) const {
+float  SimulationManager::calcVolume (float distance) const {
 
     return 1.f / (distance * distance);
 }
 
-std::vector <Ray> AcousticManager::genRaysAroundCam (int numRays) const {
+std::vector <Ray> SimulationManager::genRaysAroundCam (int numRays) const {
 
     assert(numRays > 0);
 

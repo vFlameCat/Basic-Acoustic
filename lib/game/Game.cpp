@@ -2,7 +2,7 @@
 
 
 Game::Game (int screenWidth, int screenHeight):
-  acousticManager(&scene, &camera),
+  simulationManager(&scene, &camera),
   screenWidth_(screenWidth),
   screenHeight_(screenHeight) {
 
@@ -32,7 +32,7 @@ void Game::run () {
 
         UpdateCamera(&camera, CAMERA_FREE);
 
-        acousticManager.listenAroundCam();
+        simulationManager.listenAroundCam();
 
         drawScene();
     }

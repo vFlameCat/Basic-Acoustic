@@ -1,12 +1,13 @@
 add_library(game 
     Game.cpp
     Scene.cpp
-    sound/SoundStorage.cpp
-    sound/AcousticManager.cpp
-    sound/SoundPlayer.cpp
+    sound/AudioStorage.cpp
+    sound/SimulationManager.cpp
+    sound/AudioPlayer.cpp
     sound/PlayCursor.cpp
     sound/SyncPlayers.cpp
     sound/AudioRenderer.cpp
+    sound/AudioSourcesStorage.cpp
 )
 
 target_link_libraries(game PUBLIC miniaudio vector3)

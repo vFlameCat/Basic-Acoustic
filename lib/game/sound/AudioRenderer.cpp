@@ -1,4 +1,5 @@
 #include <AudioRenderer.hpp>
+
 #include <cstring>
 
 
@@ -38,7 +39,7 @@ void AudioRenderer::renderStaticPlayCursors (float *pOutput, uint32_t frameCount
 
     std::lock_guard<std::mutex> sync(staticPlayCursors.playCursorsSync_);
 
-    for (auto& [handle, playCursor]: staticPlayCursors.playCursors_) {
+    for (auto& playCursor: staticPlayCursors.playCursors_) {
 
         for (uint32_t i = 0; i < frameCount; ++i) {
 
@@ -72,7 +73,7 @@ void AudioRenderer::renderStaticPlayCursorsWithoutAdvance (float *pOutput, uint3
 
     std::lock_guard<std::mutex> sync(staticPlayCursors.playCursorsSync_);
 
-    for (auto& [handle, playCursor]: staticPlayCursors.playCursors_) {
+    for (auto& playCursor: staticPlayCursors.playCursors_) {
 
         double originalPos = playCursor.pos_;
         for (uint32_t i = 0; i < frameCount; ++i) {

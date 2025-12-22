@@ -1,25 +1,29 @@
-#include <raylib.h>
-#include <vector>
+#include <AudioSourcesStorage.hpp>
+#include <AudioStorage.hpp>
+#include <Game.hpp>
+#include <AudioPlayer.hpp>
+#include <SimulationManager.hpp>
+#include <SyncPlayers.hpp>
 
-#include "Game.hpp"
-#include "SoundPlayer.hpp"
-#include "AcousticManager.hpp"
+#include <raylib.h>
+
+#include <vector>
 
 
 int main () {    
 
-    SoundStorage& soundStorage = SoundStorage::getInstance();
+    AudioStorage& audioStorage = AudioStorage::getInstance();
 
     std::vector <std::string> soundPaths = {
-        "/home/cat/Coding/Basic-Acoustic/resources/7NA.mp3",
-        "/home/cat/Coding/Basic-Acoustic/resources/hateyou.mp3",
-        "/home/cat/Coding/Basic-Acoustic/resources/magister.mp3",
+        APP_RESOURCES_ROOT "7NA.mp3",
+        APP_RESOURCES_ROOT "hateyou.mp3",
+        APP_RESOURCES_ROOT "magister.mp3",
     };
 
-    std::vector <SoundStorage::SoundHandle> samples;
+    std::vector <AudioStorage::Handle> audio;
     for (const auto& soundPath: soundPaths) {
 
-        samples.push_back(soundStorage.loadSound(soundPath));
+        audio.push_back(audioStorage.loadAudio(soundPath));
     }
 
     Game game(1280, 720);
@@ -127,19 +131,19 @@ int main () {
     }
 
 
-    SoundPlayer &player = SoundPlayer::getInstance();
-    std::vector <SoundPlayer::PlayCursorHandle> playerHandles;
-    for (auto handle: samples) {
+    AudioPlayer &player = AudioPlayer::getInstance();
+    std::vector <SyncStaticPlayCursors::Handle> playerHandles;
+    for (auto audioHandle: audio) {
 
-        SoundPlayer::PlayCursorHandle playerH = player.addStaticPlayCursor(PlayCursor::CreateInfo{.volume = 0.f, .soundHandle = handle});  
-        playerHandles.push_back(playerH);
+        SyncStaticPlayCursors::Handle handle = player.getStaticPlayCursors().addPlayCursor(PlayCursor::CreateInfo{.volume = 0.f, .audioHandle = audioHandle});  
+        playerHandles.push_back(handle);
     }
 
-    for (size_t i = 0; i < samples.size(); ++i) {
+    for (size_t i = 0; i < audio.size(); ++i) {
 
-        game.acousticManager.addSoundSource(AcousticManager::SoundSource{spheres[i].center, playerHandles[i]});
+        game.simulationManager.audioSources.addAudioSource(AudioSource{spheres[i].center, playerHandles[i]});
     }
-    game.acousticManager.addSoundSource(AcousticManager::SoundSource{spheres[3].center, playerHandles[0]});
+    game.simulationManager.audioSources.addAudioSource(AudioSource{spheres[3].center, playerHandles[0]});
 
 
 

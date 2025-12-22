@@ -1,4 +1,5 @@
 #include "PlayCursor.hpp"
+#include <AudioStorage.hpp>
 
 #include <iostream>
 #include <cmath>
@@ -9,11 +10,10 @@ PlayCursor::PlayCursor (CreateInfo info):
   volume      (info.volume),
   pos_        (info.pos),
   posOffset_  (info.posOffset),
-  soundHandle_(info.soundHandle),
-  samples_    (SoundStorage::getInstance().getSound(info.soundHandle)),
+  audioHandle_(info.audioHandle),
   isLooped_   (info.isLooped) {
 
-    if (soundHandle_ == SoundStorage::INVALID_SOUND_HANDLE) {
+    if (audioHandle_ == AudioStorage::Handle::Invalid) {
 
         std::cerr << "Error! Invalid sound handle!\n";
     }
@@ -22,12 +22,12 @@ PlayCursor::PlayCursor (CreateInfo info):
 
 PlayCursor::CreateInfo PlayCursor::getInfo () const {
 
-    return CreateInfo{
+    return CreateInfo {
         .pos         = pos_,
         .posOffset   = posOffset_,
         .pitch       = pitch,
         .volume      = volume,
-        .soundHandle = soundHandle_,
+        .audioHandle = audioHandle_,
         .isLooped    = isLooped_, 
     };
 }
@@ -47,7 +47,8 @@ float PlayCursor::getSample () const {
 
 float PlayCursor::getSampleInLoopedSound () const {
 
-    std::size_t size = samples_.size();
+    const Audio &audio_ = AudioStorage::getInstance().getAudio(audioHandle_);       // TODO: fix !!!!!
+    Audio::size_type size = audio_.size();
 
     double advance = pos_ + posOffset_;
     if (advance < 0) {
@@ -60,15 +61,16 @@ float PlayCursor::getSampleInLoopedSound () const {
         advance -= static_cast<double>(size);
     }
 
-    std::size_t flooredAdvance = static_cast<std::size_t>(advance);     // correct due to advance >= 0.
+    uint64_t flooredAdvance = static_cast<uint64_t>(advance);     // correct due to advance >= 0.
     float t = static_cast<float>(advance - flooredAdvance);
 
-    return std::lerp(samples_[flooredAdvance], samples_[flooredAdvance + 1], t) * volume;
+    return std::lerp(audio_[flooredAdvance], audio_[flooredAdvance + 1], t) * volume;
 }
 
 float PlayCursor::getSampleInUnloopedSound () const {
 
-    std::size_t size = samples_.size();
+    const Audio &audio_ = AudioStorage::getInstance().getAudio(audioHandle_);       // TODO: fix !!!!!
+    Audio::size_type size = audio_.size();
 
     double advance = pos_ + posOffset_;
     if (advance < 0. || advance >= static_cast<double>(size)) {
@@ -76,10 +78,10 @@ float PlayCursor::getSampleInUnloopedSound () const {
         return 0.f;
     }
 
-    std::size_t flooredAdvance = static_cast<std::size_t>(advance);     // correct due to advance >= 0.
+    uint64_t flooredAdvance = static_cast<uint64_t>(advance);     // correct due to advance >= 0.
     float t = static_cast<float>(advance - std::floor(advance));
 
-    return std::lerp(samples_[flooredAdvance], samples_[flooredAdvance + 1], t) * volume;
+    return std::lerp(audio_[flooredAdvance], audio_[flooredAdvance + 1], t) * volume;
 }
 
 void PlayCursor::advance () {

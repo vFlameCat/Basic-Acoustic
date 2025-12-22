@@ -3,7 +3,7 @@
 
 #include <raylib.h>
 #include <Scene.hpp>
-#include <AcousticManager.hpp>
+#include <SimulationManager.hpp>
 
 
 class Game final {
@@ -24,7 +24,7 @@ public:
     Scene scene{};
     Camera camera{};
 
-    AcousticManager acousticManager;
+    SimulationManager simulationManager;
 
 private:
 

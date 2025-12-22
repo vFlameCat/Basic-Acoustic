@@ -1,29 +1,36 @@
-#include "SyncPlayers.hpp"
-#include <iostream>
-#include <SoundPlayer.hpp>
+#include "PlayCursor.hpp"
+#include <SyncPlayers.hpp>
+#include <AudioPlayer.hpp>
+#include <vector>
 
 
-SyncStaticPlayCursors::PlayCursorHandle SyncStaticPlayCursors::addPlayCursor (PlayCursor playCursor) {
+SyncStaticPlayCursors::Handle SyncStaticPlayCursors::addPlayCursor (PlayCursor playCursor) {
 
     std::lock_guard<std::mutex> sync(playCursorsSync_);
 
-    playCursors_.emplace(nextHandle_, playCursor);
+    Handle handle = static_cast<Handle>(playCursors_.size());
+    playCursors_.emplace_back(playCursor);
 
-    return nextHandle_++;
+    return handle;
 }
 
-PlayCursor& SyncStaticPlayCursors::getPlayCursor (PlayCursorHandle handle) & {
+PlayCursor& SyncStaticPlayCursors::getPlayCursor (Handle handle) & {
 
     std::lock_guard<std::mutex> sync(playCursorsSync_);
 
-    return playCursors_.at(handle);
+    return playCursors_[static_cast<std::vector<PlayCursor>::size_type>(handle)];
 }
 
-void SyncStaticPlayCursors::removePlayCursor (PlayCursorHandle handle) {
+void SyncStaticPlayCursors::removePlayCursor (Handle handle) {
 
     std::lock_guard<std::mutex> sync(playCursorsSync_);
 
-    playCursors_.erase(handle);
+    std::vector<PlayCursor>::size_type id = static_cast<std::vector<PlayCursor>::size_type>(handle);
+    if (id + 1 != playCursors_.size()) {
+
+        std::swap(playCursors_[id], playCursors_.back());
+    }
+    playCursors_.pop_back();
 }
 
 
@@ -36,7 +43,7 @@ void SyncDynamicPlayCursors::addPlayCursor (PlayCursor playCursor) {
 
 void SyncDynamicPlayCursors::addPlayCursor (DynamicPlayerCreateInfo info) {
 
-    PlayCursor::CreateInfo playerInfo = SoundPlayer::getInstance().getStaticPlayCursor(info.playerHandle).getInfo();
+    PlayCursor::CreateInfo playerInfo = AudioPlayer::getInstance().getStaticPlayCursors().getPlayCursor(info.playerHandle).getInfo();
     playerInfo.posOffset += info.posOffset;
     playerInfo.volume = info.volume;
 

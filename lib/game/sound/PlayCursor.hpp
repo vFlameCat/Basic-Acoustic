@@ -1,7 +1,7 @@
 #pragma once
 
 
-#include "SoundStorage.hpp"
+#include <AudioStorage.hpp>
 
 
 class PlayCursor final {
@@ -16,7 +16,7 @@ public:
         float pitch = 1.f;
         float volume = 1.f;
 
-        SoundStorage::SoundHandle soundHandle = SoundStorage::INVALID_SOUND_HANDLE;
+        AudioStorage::Handle audioHandle = AudioStorage::Handle::Invalid;
 
         bool isLooped = true;
     };
@@ -36,7 +36,7 @@ public:
     double pos_;
     double posOffset_;
 
-    SoundStorage::SoundHandle soundHandle_;
+    AudioStorage::Handle audioHandle_;
 
 private:
 
@@ -44,8 +44,6 @@ private:
     float getSampleInUnloopedSound () const;
 
 private:
-
-    const SoundStorage::Sound &samples_;
 
     bool isLooped_;
 };

@@ -1,9 +1,11 @@
 #pragma once
 
 
+#include <PlayCursor.hpp>
+
 #include <cstdint>
 #include <mutex>
-#include <PlayCursor.hpp>
+#include <vector>
 
 
 class AudioRenderer;
@@ -16,21 +18,21 @@ public:
     friend class AudioRenderer;
 
 
-    using PlayCursorHandle = std::uint64_t;
-    static constexpr PlayCursorHandle INVALID_PLAYER_HANDLE = 0;
+    enum class Handle: uint32_t {
+
+        Invalid = uint32_t(-1)
+    };
 
 
-    SyncStaticPlayCursors () {};
+    SyncStaticPlayCursors () = default;
 
-    PlayCursorHandle addPlayCursor (PlayCursor playCursor);
-    PlayCursor& getPlayCursor (PlayCursorHandle handle) &;
-    void removePlayCursor (PlayCursorHandle handle);
+    Handle addPlayCursor (PlayCursor playCursor);
+    PlayCursor& getPlayCursor (Handle handle) &;
+    void removePlayCursor (Handle handle);
 
 private:
 
-    PlayCursorHandle nextHandle_ = 1;
-
-    std::unordered_map <PlayCursorHandle, PlayCursor> playCursors_{};
+    std::vector<PlayCursor> playCursors_{};
 
     std::mutex playCursorsSync_{};
 };
@@ -43,7 +45,7 @@ public:
 
     struct DynamicPlayerCreateInfo {
 
-        SyncStaticPlayCursors::PlayCursorHandle playerHandle = SyncStaticPlayCursors::INVALID_PLAYER_HANDLE;
+        SyncStaticPlayCursors::Handle playerHandle = SyncStaticPlayCursors::Handle::Invalid;
         double posOffset = 0.;
         float volume = 0.f;
     };
@@ -53,7 +55,7 @@ public:
     friend class AudioRenderer;
 
 
-    SyncDynamicPlayCursors () {};
+    SyncDynamicPlayCursors () = default;
 
     void addPlayCursor (PlayCursor playCursor);
     void addPlayCursor (DynamicPlayerCreateInfo info);

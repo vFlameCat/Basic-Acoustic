@@ -1,4 +1,4 @@
-#include "SoundPlayer.hpp"
+#include <AudioPlayer.hpp>
 
 #include <iostream>
 #include <chrono>
@@ -6,18 +6,18 @@
 #include <cmath>
 
 
-SoundPlayer::SoundPlayer () {
+AudioPlayer::AudioPlayer () {
 
     initDevice();  
 }
 
-SoundPlayer::~SoundPlayer () {
+AudioPlayer::~AudioPlayer () {
 
     ma_device_uninit(&device_);
 }
 
 
-void SoundPlayer::callbackPlayer (ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount) {
+void AudioPlayer::callbackPlayer (ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount) {
 
     auto start = std::chrono::high_resolution_clock::now();
 
@@ -35,23 +35,23 @@ void SoundPlayer::callbackPlayer (ma_device* pDevice, void* pOutput, const void*
     std::cout << "Callback duration: " << duration.count() << " microseconds\n";
 }
 
-SoundPlayer& SoundPlayer::getInstance () {
+AudioPlayer& AudioPlayer::getInstance () {
 
-    static SoundPlayer instance;
+    static AudioPlayer instance;
     return instance;
 }
 
-void SoundPlayer::startPlayer () {
+void AudioPlayer::startPlayer () {
 
     ma_device_start(&device_);
 }
 
-void SoundPlayer::stopPlayer () {
+void AudioPlayer::stopPlayer () {
 
     ma_device_stop(&device_);
 }
 
-void SoundPlayer::switchPlayer () {
+void AudioPlayer::switchPlayer () {
 
     if(isDevicePlaying_) {
 
@@ -64,38 +64,18 @@ void SoundPlayer::switchPlayer () {
 }
 
 
-SoundPlayer::PlayCursorHandle SoundPlayer::addStaticPlayCursor (PlayCursor staticPlayCursor) {
+SyncStaticPlayCursors& AudioPlayer::getStaticPlayCursors () {
 
-    return audioRenderer.staticPlayCursors.addPlayCursor(staticPlayCursor);
+    return audioRenderer.staticPlayCursors;
 }
 
-PlayCursor& SoundPlayer::getStaticPlayCursor (PlayCursorHandle handle) & {
+SyncDynamicPlayCursors& AudioPlayer::getDynamicPlayCursors () {
 
-    return audioRenderer.staticPlayCursors.getPlayCursor(handle);
-}
-
-void SoundPlayer::removeStaticPlayCursor (PlayCursorHandle handle) {
-
-    audioRenderer.staticPlayCursors.removePlayCursor(handle);
-}
-
-void SoundPlayer::addDynamicPlayCursor (PlayCursor dynamicPlayCursor) {
-
-    audioRenderer.dynamicPlayCursors.addPlayCursor(dynamicPlayCursor);
-}
-
-void SoundPlayer::addDynamicPlayCursor (DynamicPlayerCreateInfo info) {
-
-    audioRenderer.dynamicPlayCursors.addPlayCursor(info);
-}
-
-void SoundPlayer::dispatchDynamicPlayCursors () {
-
-    audioRenderer.dynamicPlayCursors.dispatch();
+    return audioRenderer.dynamicPlayCursors;
 }
 
 
-void SoundPlayer::initDevice () {
+void AudioPlayer::initDevice () {
 
     static CallbackData data {
 

@@ -1,59 +1,59 @@
-#include "SoundStorage.hpp"
+#include <AudioStorage.hpp>
 
 #include <iostream>
-#include <cassert>
 
 
-SoundStorage::Sound::Sound (std::vector <float> &&samples):
+Audio::Audio (std::vector <float> &&samples):
     samples_(std::move(samples)) {}
 
 
-float SoundStorage::Sound::operator[] (std::size_t pos) const {
+float Audio::operator[] (std::size_t pos) const {
 
     return samples_[pos];
 }
 
-float SoundStorage::Sound::at (std::size_t pos) const {
+float Audio::at (std::size_t pos) const {
 
     return samples_.at(pos);
 }
 
-std::size_t SoundStorage::Sound::size () const {
+Audio::size_type Audio::size () const {
 
     return samples_.size() - 1;
 }
 
 
-SoundStorage& SoundStorage::getInstance () {
+AudioStorage& AudioStorage::getInstance () {
 
-    static SoundStorage instance;
+    static AudioStorage instance;
     return instance;
 }
 
-SoundStorage::SoundHandle SoundStorage::loadSound (const std::string &samplePath) {
+AudioStorage::Handle AudioStorage::loadAudio (const std::string &samplePath) {
 
     std::vector <float> samples;
     if (decodeAndLoadFloatSamples(samplePath, samples)) {
 
-        return INVALID_SOUND_HANDLE;
+        return Handle::Invalid;
     }
 
-    sounds_.emplace(nextHandle_, Sound(std::move(samples)));
+    Handle handle = static_cast<Handle>(storage_.size());
+    storage_.emplace_back(Audio(std::move(samples)));
 
-    return nextHandle_++;
+    return handle;
 }
 
-void SoundStorage::unloadSound (SoundHandle soundHandle) {
+void AudioStorage::unloadAudio (Handle handle) {
 
-    sounds_.erase(soundHandle);
+    storage_[static_cast<std::vector<Audio>::size_type>(handle)] = Audio();
 }
 
-const SoundStorage::Sound& SoundStorage::getSound (SoundHandle soundHandle) const {
+const Audio& AudioStorage::getAudio (Handle handle) const {
 
-    return sounds_.at(soundHandle);
+    return storage_[static_cast<std::vector<Audio>::size_type>(handle)];
 }
 
-int SoundStorage::decodeAndLoadFloatSamples (const std::string &samplePath, std::vector <float> &samples) const {
+int AudioStorage::decodeAndLoadFloatSamples (const std::string &samplePath, std::vector <float> &samples) const {
 
     ma_decoder decoder = {};
     ma_decoder_config config = ma_decoder_config_init(ma_format_f32, 1, 48000);
