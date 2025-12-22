@@ -15,7 +15,6 @@ public:
     using size_type = std::vector<float>::size_type;
 
 
-    Audio () = default;
     Audio (std::vector <float> &&samples);
 
     
@@ -62,5 +61,5 @@ private:
 
 private:
 
-    std::vector<Audio> storage_;
+    std::vector<Audio> storage_{};
 };

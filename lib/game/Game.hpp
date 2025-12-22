@@ -24,7 +24,7 @@ public:
     Scene scene{};
     Camera camera{};
 
-    SimulationManager simulationManager;
+    SimulationManager simulationManager{};
 
 private:
 

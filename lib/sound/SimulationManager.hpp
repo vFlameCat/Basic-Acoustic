@@ -1,8 +1,16 @@
 #pragma once
 
 
-#include <Scene.hpp>
 #include <AudioSourcesStorage.hpp>
+#include <Vector3.hpp>
+
+#include "raylib.h"
+
+
+struct Listener {
+
+    fc::Vector3f position = fc::Vector3f(0.f, 0.f, 0.f);
+};
 
 
 class SimulationManager final {
@@ -14,28 +22,29 @@ public:
 
     static constexpr float SoundSpeed = 343.f;
 
-    SimulationManager (const Scene *scene, const Camera *camera);
+    SimulationManager () = default;
 
     SimulationManager (const SimulationManager&) = default;
     SimulationManager& operator= (const SimulationManager&) = default;
 
-    void listenAroundCam () const;
+    template <typename CollisionFunc>
+    void listenAroundCam (CollisionFunc collisionFunc) const;
 
 public:
 
+    Listener listener{};
     AudioSourcesStorage audioSources{};
 
 private:
 
-    void traceAudioSources (Ray ray, int depth = 10) const;
+    template <typename CollisionFunc>
+    void traceAudioSources (Ray ray, CollisionFunc collisionFunc, int depth = 10) const;
 
     double calcPosOffset (double distance) const;
     float  calcVolume (float distance) const;
 
     std::vector <Ray> genRaysAroundCam (int numRays) const;
-
-private:
-
-    const Scene *scene_;
-    const Camera *camera_;
 };
+
+
+#include "SimulationManager.inl"

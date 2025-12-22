@@ -1,35 +1,20 @@
-#include "SimulationManager.hpp"
-#include "SyncPlayers.hpp"
-
-#include <Vector3.hpp>
-#include <cmath>
-#include <numbers>
+#include <SimulationManager.hpp>
 #include <AudioPlayer.hpp>
-#include <iostream>
 
 
-SimulationManager::SimulationManager (const Scene *scene, const Camera *camera):
-  scene_(scene),
-  camera_(camera) {
-
-    if (!scene_ || !camera_) {
-
-        std::cerr << "Error! Invalid Arguments in SimulationManager Ctor\n";
-    }
-}
-
-void SimulationManager::listenAroundCam () const {
+template <typename CollisionFunc>
+void SimulationManager::listenAroundCam (CollisionFunc collisionFunc) const {
 
     AudioPlayer& player = AudioPlayer::getInstance();
 
     for (const auto &source: audioSources) {
 
-        fc::Vector3f rayPos(camera_->position), sourcePos(source.position);
+        fc::Vector3f rayPos(listener.position), sourcePos(source.position);
 
         float distanceToSource = fc::distance(rayPos, sourcePos);
 
         fc::Vector3f dirToSource = sourcePos - rayPos;
-        RayCollision collisionToSource = scene_->getRayCollisionBoxes(Ray{rayPos, dirToSource.normalize()});
+        RayCollision collisionToSource = collisionFunc(Ray{rayPos, dirToSource.normalize()});
 
         SyncDynamicPlayCursors::DynamicPlayerCreateInfo info;
         info.playerHandle = source.handle;
@@ -44,16 +29,17 @@ void SimulationManager::listenAroundCam () const {
         player.getDynamicPlayCursors().addPlayCursor(info);
     }
 
-    std::vector <Ray> rays = genRaysAroundCam(32);      // no need to generate every frame
+    std::vector <Ray> rays = genRaysAroundCam(32);      // TODO: could be optimized
     for (auto ray: rays) {
 
-        traceAudioSources(ray, 10);
+        traceAudioSources(ray, collisionFunc, 10);
     }
 
     player.getDynamicPlayCursors().dispatch();
 }
 
-void SimulationManager::traceAudioSources (Ray ray, int depth) const {
+template <typename CollisionFunc>
+void SimulationManager::traceAudioSources (Ray ray, CollisionFunc collisionFunc, int depth) const {
 
     Ray curRay = ray;
 
@@ -63,7 +49,7 @@ void SimulationManager::traceAudioSources (Ray ray, int depth) const {
 
     for (int curDepth = 0; curDepth < depth; ++curDepth) {
 
-        RayCollision collision = scene_->getRayCollisionBoxes(curRay);
+        RayCollision collision = collisionFunc(curRay);
         if (!collision.hit) {
 
             break;
@@ -84,7 +70,7 @@ void SimulationManager::traceAudioSources (Ray ray, int depth) const {
             float distanceToSource = fc::distance(rayPos, sourcePos);
 
             fc::Vector3f dirToSource = sourcePos - rayPos;
-            RayCollision collisionToSource = scene_->getRayCollisionBoxes(Ray{rayPos, dirToSource.normalize()});
+            RayCollision collisionToSource = collisionFunc(Ray{rayPos, dirToSource.normalize()});
 
             if (!collisionToSource.hit || distanceToSource < collisionToSource.distance) {
 
@@ -98,41 +84,4 @@ void SimulationManager::traceAudioSources (Ray ray, int depth) const {
             }
         }
     }
-}
-
-double SimulationManager::calcPosOffset (double distance) const {
-
-    return -distance / SoundSpeed * 48000;
-}
-
-float  SimulationManager::calcVolume (float distance) const {
-
-    return 1.f / (distance * distance);
-}
-
-std::vector <Ray> SimulationManager::genRaysAroundCam (int numRays) const {
-
-    assert(numRays > 0);
-
-    std::vector<Ray> rays;
-    rays.reserve(numRays);
-
-    float goldenRatio = (1.0f + std::sqrt(5.0f)) / 2.0f;    // may be could be constexpr since 26 standart
-
-    for (int i = 0; i < numRays; ++i) {
-
-        float theta = 2 * static_cast<float>(std::numbers::pi) * static_cast<float>(i) / goldenRatio;
-        float phi = std::acos(1.0f - 2.0f * (static_cast<float>(i) + 0.5f) / static_cast<float>(numRays));
-        
-        fc::Vector3f dir (
-
-            std::cos(theta) * std::sin(phi),
-            std::sin(theta) * std::sin(phi),
-            std::cos(phi)
-        );
-
-        rays.emplace_back(Ray{camera_->position, dir});
-    }
-
-    return rays;
 }

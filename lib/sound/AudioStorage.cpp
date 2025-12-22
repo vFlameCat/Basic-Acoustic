@@ -1,6 +1,8 @@
 #include <AudioStorage.hpp>
 
 #include <iostream>
+#include <utility>
+#include <vector>
 
 
 Audio::Audio (std::vector <float> &&samples):
@@ -45,7 +47,12 @@ AudioStorage::Handle AudioStorage::loadAudio (const std::string &samplePath) {
 
 void AudioStorage::unloadAudio (Handle handle) {
 
-    storage_[static_cast<std::vector<Audio>::size_type>(handle)] = Audio();
+    std::vector<Audio>::size_type id = static_cast<std::vector<Audio>::size_type>(handle);
+    if (id + 1 != storage_.size()) {
+
+        std::swap(storage_[id], storage_.back());
+    }
+    storage_.pop_back();
 }
 
 const Audio& AudioStorage::getAudio (Handle handle) const {

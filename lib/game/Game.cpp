@@ -1,8 +1,8 @@
 #include "Game.hpp"
+#include "SimulationManager.hpp"
 
 
 Game::Game (int screenWidth, int screenHeight):
-  simulationManager(&scene, &camera),
   screenWidth_(screenWidth),
   screenHeight_(screenHeight) {
 
@@ -32,7 +32,8 @@ void Game::run () {
 
         UpdateCamera(&camera, CAMERA_FREE);
 
-        simulationManager.listenAroundCam();
+        simulationManager.listener.position = camera.position;
+        simulationManager.listenAroundCam([&scene = this->scene](Ray ray) { return scene.getRayCollisionBoxes(ray); });
 
         drawScene();
     }
