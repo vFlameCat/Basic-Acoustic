@@ -16,7 +16,7 @@ public:
         float pitch = 1.f;
         float volume = 1.f;
 
-        AudioStorage::Handle audioHandle = AudioStorage::Handle::Invalid;
+        const Audio& audio;
 
         bool isLooped = true;
     };
@@ -36,7 +36,7 @@ public:
     double pos_;
     double posOffset_;
 
-    AudioStorage::Handle audioHandle_;
+    const Audio* audio_;
 
 private:
 

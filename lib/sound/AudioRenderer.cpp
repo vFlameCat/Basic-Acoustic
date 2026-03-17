@@ -29,7 +29,7 @@ void AudioRenderer::renderAudio (float *pOutput, uint32_t frameCount) {
 
 void AudioRenderer::render (float *pOutput, uint32_t frameCount) {
 
-    memset(pOutput, 0.f, frameCount * sizeof(float));
+    memset(pOutput, 0, frameCount * sizeof(float));
 
     renderStaticPlayCursors(pOutput, frameCount);
     renderDynamicPlayCursors(pOutput, frameCount);
@@ -63,7 +63,7 @@ void AudioRenderer::renderDynamicPlayCursors (float *pOutput, uint32_t frameCoun
 
 void AudioRenderer::renderWithoutAdvance (float *pOutput, uint32_t frameCount) {
 
-    memset(pOutput, 0.f, frameCount * sizeof(float));
+    memset(pOutput, 0, frameCount * sizeof(float));
 
     renderStaticPlayCursorsWithoutAdvance(pOutput, frameCount);
     renderDynamicPlayCursorsWithoutAdvance(pOutput, frameCount);

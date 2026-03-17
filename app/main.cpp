@@ -135,7 +135,7 @@ int main () {
     std::vector <SyncStaticPlayCursors::Handle> playerHandles;
     for (auto audioHandle: audio) {
 
-        SyncStaticPlayCursors::Handle handle = player.getStaticPlayCursors().addPlayCursor(PlayCursor::CreateInfo{.volume = 0.f, .audioHandle = audioHandle});  
+        SyncStaticPlayCursors::Handle handle = player.getStaticPlayCursors().addPlayCursor(PlayCursor::CreateInfo{.volume = 0.f, .audio = audioStorage.getAudio(audioHandle)});
         playerHandles.push_back(handle);
     }
 

@@ -5,6 +5,7 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 #include <cstdint>
 
 
@@ -61,5 +62,5 @@ private:
 
 private:
 
-    std::vector<Audio> storage_{};
+    std::vector<std::unique_ptr<Audio>> storage_{};
 };

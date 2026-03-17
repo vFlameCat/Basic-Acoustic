@@ -9,6 +9,8 @@ void SimulationManager::listenAroundCam (CollisionFunc collisionFunc) const {
 
     for (const auto &source: audioSources) {
 
+        if (!source.isValid()) continue;
+
         fc::Vector3f rayPos(listener.position), sourcePos(source.position);
 
         float distanceToSource = fc::distance(rayPos, sourcePos);
@@ -44,6 +46,7 @@ void SimulationManager::traceAudioSources (Ray ray, CollisionFunc collisionFunc,
     Ray curRay = ray;
 
     float curVolumeDecr = 1.f;
+    float curPathLength = 0.f;
 
     AudioPlayer& player = AudioPlayer::getInstance();
 
@@ -55,6 +58,8 @@ void SimulationManager::traceAudioSources (Ray ray, CollisionFunc collisionFunc,
             break;
         }
 
+        curPathLength += fc::distance(fc::Vector3f(curRay.position), fc::Vector3f(collision.point));
+
         fc::Vector3f incidentDir = curRay.direction;
         fc::Vector3f reflectDir = incidentDir - 2 * incidentDir.dot(collision.normal) * fc::Vector3f(collision.normal);
 
@@ -65,6 +70,8 @@ void SimulationManager::traceAudioSources (Ray ray, CollisionFunc collisionFunc,
 
         for (const auto &source: audioSources) {
 
+            if (!source.isValid()) continue;
+
             fc::Vector3f rayPos(curRay.position), sourcePos(source.position);
 
             float distanceToSource = fc::distance(rayPos, sourcePos);
@@ -74,10 +81,12 @@ void SimulationManager::traceAudioSources (Ray ray, CollisionFunc collisionFunc,
 
             if (!collisionToSource.hit || distanceToSource < collisionToSource.distance) {
 
+                float totalDistance = curPathLength + distanceToSource;
+
                 SyncDynamicPlayCursors::DynamicPlayerCreateInfo info;
                 info.playerHandle = source.handle;
-                info.posOffset = calcPosOffset(distanceToSource);
-                info.volume = calcVolume(distanceToSource);
+                info.posOffset = calcPosOffset(totalDistance);
+                info.volume = calcVolume(totalDistance);
                 info.volume *= curVolumeDecr;
 
                 player.getDynamicPlayCursors().addPlayCursor(info);

@@ -40,24 +40,19 @@ AudioStorage::Handle AudioStorage::loadAudio (const std::string &samplePath) {
     }
 
     Handle handle = static_cast<Handle>(storage_.size());
-    storage_.emplace_back(Audio(std::move(samples)));
+    storage_.emplace_back(std::make_unique<Audio>(std::move(samples)));
 
     return handle;
 }
 
 void AudioStorage::unloadAudio (Handle handle) {
 
-    std::vector<Audio>::size_type id = static_cast<std::vector<Audio>::size_type>(handle);
-    if (id + 1 != storage_.size()) {
-
-        std::swap(storage_[id], storage_.back());
-    }
-    storage_.pop_back();
+    storage_[static_cast<std::vector<std::unique_ptr<Audio>>::size_type>(handle)].reset();
 }
 
 const Audio& AudioStorage::getAudio (Handle handle) const {
 
-    return storage_[static_cast<std::vector<Audio>::size_type>(handle)];
+    return *storage_[static_cast<std::vector<std::unique_ptr<Audio>>::size_type>(handle)];
 }
 
 int AudioStorage::decodeAndLoadFloatSamples (const std::string &samplePath, std::vector <float> &samples) const {
@@ -66,7 +61,7 @@ int AudioStorage::decodeAndLoadFloatSamples (const std::string &samplePath, std:
     ma_decoder_config config = ma_decoder_config_init(ma_format_f32, 1, 48000);
     if (ma_decoder_init_file(samplePath.c_str(), &config, &decoder) != MA_SUCCESS) {
 
-        std::cerr << "An error occured during loading sound: " + samplePath + " !\n";
+        std::cerr << "An error occured during loading audio: " + samplePath + " !\n";
         return -1;
     }
 
@@ -80,17 +75,17 @@ int AudioStorage::decodeAndLoadFloatSamples (const std::string &samplePath, std:
     ma_uint64 frameCount = 0;
     if (ma_decoder_get_length_in_pcm_frames(&decoder, &frameCount) != MA_SUCCESS) {
 
-        std::cerr << "An error occured during loading sound: " + samplePath + " !\n";
+        std::cerr << "An error occured during loading audio: " + samplePath + " !\n";
         return -1;
     }
 
     samples.resize(frameCount + 1);
     if (ma_decoder_read_pcm_frames(&decoder, samples.data(), frameCount, nullptr) != MA_SUCCESS) {
 
-        std::cerr << "An error occured during loading sound: " + samplePath + " !\n";
+        std::cerr << "An error occured during loading audio: " + samplePath + " !\n";
         return -1;
     }    
-    samples[frameCount] = samples[0];   // so we can process looped sounds more effectively
+    samples[frameCount] = samples[0];   // so we can process looped audios more effectively
 
     return 0;
 }

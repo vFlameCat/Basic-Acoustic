@@ -13,6 +13,8 @@ struct AudioSource {
 
     fc::Vector3f position = fc::Vector3f(0.f, 0.f,  0.f);
     SyncStaticPlayCursors::Handle handle = SyncStaticPlayCursors::Handle::Invalid;
+
+    bool isValid () const { return handle != SyncStaticPlayCursors::Handle::Invalid; }
 };
 
 
@@ -28,13 +30,9 @@ public:
 
     AudioSourcesStorage () = default;
 
-    
     Handle addAudioSource (const AudioSource &source);
 
-    const AudioSource& getAudioSource (Handle handle) const;
-          AudioSource& getAudioSource (Handle handle);
-
-    void removeAudioSource (Handle handle);    
+    void removeAudioSource (Handle handle);
 
     std::vector<AudioSource>::iterator begin() { return storage_.begin(); }
     std::vector<AudioSource>::iterator end() { return storage_.end(); }
