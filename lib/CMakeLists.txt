@@ -1,4 +1,5 @@
-add_subdirectory(miniaudio) 
+add_subdirectory(miniaudio)
 add_subdirectory(math)
+add_subdirectory(concurrency)
 add_subdirectory(game)
 add_subdirectory(sound)

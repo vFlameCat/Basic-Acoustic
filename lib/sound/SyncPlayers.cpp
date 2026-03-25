@@ -1,71 +1,128 @@
 #include "PlayCursor.hpp"
 #include <SyncPlayers.hpp>
 #include <AudioPlayer.hpp>
+#include <cstdint>
 #include <vector>
 
 
-SyncStaticPlayCursors::Handle SyncStaticPlayCursors::addPlayCursor (PlayCursor playCursor) {
+SyncStaticPlayCursors::MainView::MainView (SyncStaticPlayCursors &playCursors): 
+  playCursors_(playCursors) {}
 
-    std::lock_guard<std::mutex> sync(playCursorsSync_);
+SyncStaticPlayCursors::Handle SyncStaticPlayCursors::MainView::addPlayCursor (PlayCursor playCursor) {
 
-    Handle handle = static_cast<Handle>(playCursors_.size());
-    playCursors_.emplace_back(playCursor);
+    playCursors_.cmdQueue_.push(Command{ Command::Add { playCursor }});
+
+    Handle handle = playCursors_.nextFreeHandle_;
+    playCursors_.nextFreeHandle_ = static_cast<Handle>(static_cast<uint32_t>(playCursors_.nextFreeHandle_) + 1);
 
     return handle;
 }
 
-PlayCursor& SyncStaticPlayCursors::getPlayCursor (Handle handle) & {
+void SyncStaticPlayCursors::MainView::removePlayCursor (Handle handle) {
 
-    std::lock_guard<std::mutex> sync(playCursorsSync_);
-
-    return playCursors_[static_cast<std::vector<PlayCursor>::size_type>(handle)];
+    playCursors_.cmdQueue_.push(Command{ Command::Remove { handle }});
 }
 
-void SyncStaticPlayCursors::removePlayCursor (Handle handle) {
 
-    std::lock_guard<std::mutex> sync(playCursorsSync_);
 
-    std::vector<PlayCursor>::size_type id = static_cast<std::vector<PlayCursor>::size_type>(handle);
-    if (id + 1 != playCursors_.size()) {
+SyncStaticPlayCursors::RenderView::RenderView (SyncStaticPlayCursors &playCursors): 
+  playCursors_(playCursors) {
 
-        std::swap(playCursors_[id], playCursors_.back());
+    Command cmd;
+    while (playCursors_.cmdQueue_.pop(cmd)) {
+        std::visit(overloads {
+            
+            [](std::monostate) {},
+            [this](Command::Add &cmd)    { parseCommandAdd(cmd); },
+            [this](Command::Remove &cmd) { parseCommandRemove(cmd); },
+        }, cmd.data);
     }
-    playCursors_.pop_back();
+}
+
+PlayCursor::CreateInfo SyncStaticPlayCursors::RenderView::getPlayCursorInfo (Handle handle) const {
+
+    return playCursors_.playCursors_[static_cast<uint32_t>(handle)].getInfo();
+}
+
+std::vector<PlayCursor>& SyncStaticPlayCursors::RenderView::getPlayCursors () const {
+
+    return playCursors_.playCursors_;
+}
+
+void SyncStaticPlayCursors::RenderView::parseCommandAdd (Command::Add &cmd) {
+
+    playCursors_.playCursors_.emplace_back(cmd.playCursor);
+}
+
+void SyncStaticPlayCursors::RenderView::parseCommandRemove (Command::Remove &cmd) {
+
+    // Not implemented
+}
+
+
+
+SyncStaticPlayCursors::MainView SyncStaticPlayCursors::getMainView () {
+
+    return MainView(*this);
+}
+
+SyncStaticPlayCursors::RenderView SyncStaticPlayCursors::getRenderView () {
+
+    return RenderView(*this);
 }
 
 
 
 
-void SyncDynamicPlayCursors::addPlayCursor (PlayCursor playCursor) {
+SyncDynamicPlayCursors::FrameWriter::FrameWriter (SyncDynamicPlayCursors &playCursors): 
+  playCursors_(playCursors), writeBuf_(playCursors.buf_.getWriteBuffer()) {
 
-    writeBuf_.push_back(playCursor);
-}
-
-void SyncDynamicPlayCursors::addPlayCursor (DynamicPlayerCreateInfo info) {
-
-    PlayCursor::CreateInfo playerInfo = AudioPlayer::getInstance().getStaticPlayCursors().getPlayCursor(info.playerHandle).getInfo();
-    playerInfo.posOffset += info.posOffset;
-    playerInfo.volume = info.volume;
-
-    writeBuf_.push_back(playerInfo);
-}
-
-void SyncDynamicPlayCursors::dispatch () {
-
-    std::lock_guard<std::mutex> sync(playCursorsSync_);
-
-    writeBuf_.swap(swapBuf_);
-    isSwapReady = true;
     writeBuf_.clear();
 }
 
-void SyncDynamicPlayCursors::recieve () {
+SyncDynamicPlayCursors::FrameWriter::~FrameWriter () {
 
-    std::lock_guard<std::mutex> sync(playCursorsSync_);
+    playCursors_.buf_.publish();
+}
 
-    if (isSwapReady) {
+void SyncDynamicPlayCursors::FrameWriter::addPlayCursor (DynamicPlayerCreateInfo info) const {
 
-        playCursors_.swap(swapBuf_);
-        isSwapReady = false;
+    writeBuf_.push_back(info);
+}
+
+
+
+SyncDynamicPlayCursors::FrameRenderer::FrameRenderer (SyncDynamicPlayCursors &playCursors, const SyncStaticPlayCursors::RenderView &renderView):
+  playCursors_(playCursors) {
+
+    if(!playCursors_.buf_.fetch()) 
+        return;
+
+    playCursors_.playCursors_.clear();
+    std::vector<DynamicPlayerCreateInfo> &playersInfo = playCursors_.buf_.getReadBuffer();
+    for (DynamicPlayerCreateInfo dynamicInfo : playersInfo) {
+
+        PlayCursor::CreateInfo info = renderView.getPlayCursorInfo(dynamicInfo.playerHandle);
+        info.posOffset = dynamicInfo.posOffset;
+        info.volume = dynamicInfo.volume;
+
+        playCursors_.playCursors_.emplace_back(PlayCursor(info));
     }
+}
+
+std::vector<PlayCursor>& SyncDynamicPlayCursors::FrameRenderer::getPlayCursors () const {
+
+    return playCursors_.playCursors_;
+}
+
+
+
+SyncDynamicPlayCursors::FrameWriter SyncDynamicPlayCursors::getFrameWriter () {
+
+    return FrameWriter(*this);
+}
+
+SyncDynamicPlayCursors::FrameRenderer SyncDynamicPlayCursors::getFrameRenderer (const SyncStaticPlayCursors::RenderView &renderView) {
+
+    return FrameRenderer(*this, renderView);
 }

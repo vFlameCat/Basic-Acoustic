@@ -17,10 +17,9 @@ class SimulationManager final {
 
 public:
 
-    using SoundSourceHandle = uint64_t;
-    static constexpr SoundSourceHandle INVALID_SOUND_SOURCE_HANDLE = 0;
-
     static constexpr float SoundSpeed = 343.f;
+
+public:
 
     SimulationManager () = default;
 
@@ -38,7 +37,7 @@ public:
 private:
 
     template <typename CollisionFunc>
-    void traceAudioSources (Ray ray, CollisionFunc collisionFunc, int depth = 10) const;
+    void traceAudioSources (SyncDynamicPlayCursors::FrameWriter &players, Ray ray, CollisionFunc collisionFunc, int depth = 10) const;
 
     double calcPosOffset (double distance) const;
     float  calcVolume (float distance) const;

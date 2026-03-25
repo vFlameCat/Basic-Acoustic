@@ -4,37 +4,93 @@
 #include <PlayCursor.hpp>
 
 #include <cstdint>
-#include <mutex>
 #include <vector>
 
+#include <variant>
+#include <concurrency/SPSCQueue.hpp>
 
-class AudioRenderer;
+#include <concurrency/TripleBuffer.hpp>
 
 
 class SyncStaticPlayCursors {
 
 public:
 
-    friend class AudioRenderer;
-
-
     enum class Handle: uint32_t {
 
         Invalid = uint32_t(-1)
     };
 
+private:
+
+    struct Command {
+
+        struct Add {
+
+            PlayCursor playCursor;
+        };
+
+        struct Remove {
+
+            Handle handle;
+        };
+
+        std::variant<std::monostate, Add, Remove> data;
+    };
+
+public:
+
+    class MainView {
+
+    public:
+
+        explicit MainView (SyncStaticPlayCursors &playCursors);
+
+        Handle addPlayCursor (PlayCursor playCursor);
+        void removePlayCursor (Handle handle);
+
+    private:
+
+        SyncStaticPlayCursors &playCursors_;
+    };
+
+    class RenderView {
+
+    public:
+
+        explicit RenderView (SyncStaticPlayCursors &playCursors);
+
+        PlayCursor::CreateInfo getPlayCursorInfo (Handle handle) const;
+
+        std::vector<PlayCursor>& getPlayCursors () const;
+
+    private:
+
+        template<class... Ts>
+        struct overloads : Ts... { using Ts::operator()...; };
+
+        void parseCommandAdd (Command::Add &cmd);
+        void parseCommandRemove (Command::Remove &cmd);
+
+    private:
+
+        SyncStaticPlayCursors &playCursors_;
+    };
+
+public:
 
     SyncStaticPlayCursors () = default;
 
-    Handle addPlayCursor (PlayCursor playCursor);
-    PlayCursor& getPlayCursor (Handle handle) &;
-    void removePlayCursor (Handle handle);
+    MainView getMainView ();
+    RenderView getRenderView ();
 
 private:
 
-    std::vector<PlayCursor> playCursors_{};
+    Handle nextFreeHandle_ = static_cast<Handle>(0);
 
-    std::mutex playCursorsSync_{};
+    std::vector<PlayCursor> playCursors_;
+
+    SPSCQueue<Command, 1024> cmdQueue_;
 };
 
 
@@ -50,29 +106,45 @@ public:
         float volume = 0.f;
     };
 
+    class FrameWriter {
+    
+    public:
+
+        explicit FrameWriter (SyncDynamicPlayCursors &playCursors);
+
+        ~FrameWriter ();
+
+        void addPlayCursor (DynamicPlayerCreateInfo info) const;
+    
+    private:
+
+        SyncDynamicPlayCursors &playCursors_;
+        std::vector<DynamicPlayerCreateInfo> &writeBuf_;
+    };
+
+    class FrameRenderer {
+    
+    public:
+
+        explicit FrameRenderer (SyncDynamicPlayCursors &playCursors, const SyncStaticPlayCursors::RenderView &renderView);
+
+        std::vector<PlayCursor>& getPlayCursors () const;
+    
+    private:
+
+        SyncDynamicPlayCursors &playCursors_;
+    };
+
 public:
-
-    friend class AudioRenderer;
-
 
     SyncDynamicPlayCursors () = default;
 
-    void addPlayCursor (PlayCursor playCursor);
-    void addPlayCursor (DynamicPlayerCreateInfo info);
-
-    void dispatch ();
-    void recieve ();
+    FrameWriter getFrameWriter ();
+    FrameRenderer getFrameRenderer (const SyncStaticPlayCursors::RenderView &renderView);
 
 private:
 
-    // buffer for sound thread to read from
-    std::vector <PlayCursor> playCursors_{};
+    std::vector<PlayCursor> playCursors_;
 
-    std::vector <PlayCursor> swapBuf_{};
-
-    // buffer for main thread to fill
-    std::vector <PlayCursor> writeBuf_{};
-
-    bool isSwapReady = false;
-    std::mutex playCursorsSync_{};
+    TripleBuffer<std::vector<DynamicPlayerCreateInfo>> buf_;
 };

@@ -1,3 +1,4 @@
+#include "SyncPlayers.hpp"
 #include <SimulationManager.hpp>
 #include <AudioPlayer.hpp>
 
@@ -5,7 +6,7 @@
 template <typename CollisionFunc>
 void SimulationManager::listenAroundCam (CollisionFunc collisionFunc) const {
 
-    AudioPlayer& player = AudioPlayer::getInstance();
+    SyncDynamicPlayCursors::FrameWriter players = AudioPlayer::getInstance().getDynamicPlayCursors().getFrameWriter();
 
     for (const auto &source: audioSources) {
 
@@ -28,27 +29,23 @@ void SimulationManager::listenAroundCam (CollisionFunc collisionFunc) const {
             info.volume *= 0.1f;
         }
 
-        player.getDynamicPlayCursors().addPlayCursor(info);
+        players.addPlayCursor(info);
     }
 
     std::vector <Ray> rays = genRaysAroundCam(32);      // TODO: could be optimized
     for (auto ray: rays) {
 
-        traceAudioSources(ray, collisionFunc, 10);
+        traceAudioSources(players, ray, collisionFunc, 10);
     }
-
-    player.getDynamicPlayCursors().dispatch();
 }
 
 template <typename CollisionFunc>
-void SimulationManager::traceAudioSources (Ray ray, CollisionFunc collisionFunc, int depth) const {
+void SimulationManager::traceAudioSources (SyncDynamicPlayCursors::FrameWriter &players, Ray ray, CollisionFunc collisionFunc, int depth) const {
 
     Ray curRay = ray;
 
     float curVolumeDecr = 1.f;
     float curPathLength = 0.f;
-
-    AudioPlayer& player = AudioPlayer::getInstance();
 
     for (int curDepth = 0; curDepth < depth; ++curDepth) {
 
@@ -89,7 +86,7 @@ void SimulationManager::traceAudioSources (Ray ray, CollisionFunc collisionFunc,
                 info.volume = calcVolume(totalDistance);
                 info.volume *= curVolumeDecr;
 
-                player.getDynamicPlayCursors().addPlayCursor(info);
+                players.addPlayCursor(info);
             }
         }
     }

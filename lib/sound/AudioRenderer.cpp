@@ -1,6 +1,9 @@
+#include "PlayCursor.hpp"
+#include "SyncPlayers.hpp"
 #include <AudioRenderer.hpp>
 
 #include <cstring>
+#include <vector>
 
 
 AudioRenderer::AudioRenderer () {
@@ -10,12 +13,15 @@ AudioRenderer::AudioRenderer () {
 
 void AudioRenderer::renderAudio (float *pOutput, uint32_t frameCount) {
 
-    dynamicPlayCursors.recieve();
+    SyncStaticPlayCursors::RenderView renderView = staticPlayCursors.getRenderView();
+    SyncDynamicPlayCursors::FrameRenderer frameRenderer = dynamicPlayCursors.getFrameRenderer(renderView);
+
+    std::vector<PlayCursor> &staticPlayers = renderView.getPlayCursors();
+    std::vector<PlayCursor> &dynamicPlayers = frameRenderer.getPlayCursors();
+
+    render(pOutput, frameCount, staticPlayers, dynamicPlayers);
 
     const uint32_t overlapCount = frameCount / 2;
-
-    render(pOutput, frameCount);
-
     for (uint32_t i = 0; i < overlapCount; ++i) {
 
         float fadeIn = static_cast<float>(i) / overlapCount;
@@ -24,22 +30,20 @@ void AudioRenderer::renderAudio (float *pOutput, uint32_t frameCount) {
         pOutput[i] = overlapBuf_[i] * fadeOut + pOutput[i] * fadeIn;
     }
 
-    renderWithoutAdvance(overlapBuf_.data(), overlapCount);
+    renderWithoutAdvance(overlapBuf_.data(), overlapCount, staticPlayers, dynamicPlayers);
 }
 
-void AudioRenderer::render (float *pOutput, uint32_t frameCount) {
+void AudioRenderer::render (float *pOutput, uint32_t frameCount, std::vector<PlayCursor> &staticPlayers, std::vector<PlayCursor> &dynamicPlayers) {
 
     memset(pOutput, 0, frameCount * sizeof(float));
 
-    renderStaticPlayCursors(pOutput, frameCount);
-    renderDynamicPlayCursors(pOutput, frameCount);
+    renderPlayCursors(pOutput, frameCount, staticPlayers);
+    renderPlayCursors(pOutput, frameCount, dynamicPlayers);
 }
 
-void AudioRenderer::renderStaticPlayCursors (float *pOutput, uint32_t frameCount) {
+void AudioRenderer::renderPlayCursors (float *pOutput, uint32_t frameCount, std::vector<PlayCursor> &players) {
 
-    std::lock_guard<std::mutex> sync(staticPlayCursors.playCursorsSync_);
-
-    for (auto& playCursor: staticPlayCursors.playCursors_) {
+    for (auto& playCursor: players) {
 
         for (uint32_t i = 0; i < frameCount; ++i) {
 
@@ -49,46 +53,18 @@ void AudioRenderer::renderStaticPlayCursors (float *pOutput, uint32_t frameCount
     }
 }
 
-void AudioRenderer::renderDynamicPlayCursors (float *pOutput, uint32_t frameCount) {
-
-    for (auto& playCursor: dynamicPlayCursors.playCursors_) {
-
-        for (uint32_t i = 0; i < frameCount; ++i) {
-
-            pOutput[i] += playCursor.getSample();
-            playCursor.advance();
-        }
-    }
-}
-
-void AudioRenderer::renderWithoutAdvance (float *pOutput, uint32_t frameCount) {
+void AudioRenderer::renderWithoutAdvance (float *pOutput, uint32_t frameCount, std::vector<PlayCursor> &staticPlayers, std::vector<PlayCursor> &dynamicPlayers) {
 
     memset(pOutput, 0, frameCount * sizeof(float));
 
-    renderStaticPlayCursorsWithoutAdvance(pOutput, frameCount);
-    renderDynamicPlayCursorsWithoutAdvance(pOutput, frameCount);
+    renderPlayCursorsWithoutAdvance(pOutput, frameCount, staticPlayers);
+    renderPlayCursorsWithoutAdvance(pOutput, frameCount, dynamicPlayers);
 }
 
-void AudioRenderer::renderStaticPlayCursorsWithoutAdvance (float *pOutput, uint32_t frameCount) {
+void AudioRenderer::renderPlayCursorsWithoutAdvance (float *pOutput, uint32_t frameCount, std::vector<PlayCursor> &players) {
 
-    std::lock_guard<std::mutex> sync(staticPlayCursors.playCursorsSync_);
+    for (auto& playCursor: players) {
 
-    for (auto& playCursor: staticPlayCursors.playCursors_) {
-
-        double originalPos = playCursor.pos_;
-        for (uint32_t i = 0; i < frameCount; ++i) {
-
-            pOutput[i] += playCursor.getSample();
-            playCursor.advance();
-        }
-        playCursor.pos_ = originalPos;
-    }
-}
-
-void AudioRenderer::renderDynamicPlayCursorsWithoutAdvance (float *pOutput, uint32_t frameCount) {
-
-    for (auto& playCursor: dynamicPlayCursors.playCursors_) {
-        
         double originalPos = playCursor.pos_;
         for (uint32_t i = 0; i < frameCount; ++i) {
 
