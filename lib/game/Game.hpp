@@ -6,11 +6,14 @@
 #include <SimulationManager.hpp>
 
 
+class AudioPlayer;
+
+
 class Game final {
 
 public:
 
-    Game (int screenWidth, int screenHeight);
+    Game (int screenWidth, int screenHeight, AudioPlayer &player);
 
     Game (const Game&) = delete;
     Game& operator= (const Game&) = delete;
@@ -24,7 +27,7 @@ public:
     Scene scene{};
     Camera camera{};
 
-    SimulationManager simulationManager{};
+    SimulationManager simulationManager;
 
 private:
 

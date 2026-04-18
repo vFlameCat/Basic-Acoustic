@@ -21,24 +21,18 @@ void AudioPlayer::callbackPlayer (ma_device* pDevice, void* pOutput, const void*
 
     auto start = std::chrono::high_resolution_clock::now();
 
-    CallbackData *data = static_cast<CallbackData*>(pDevice->pUserData);
-    if (!data) {
+    AudioPlayer *player = static_cast<AudioPlayer*>(pDevice->pUserData);
+    if (!player) {
 
         std::cerr << "Error! No data in callbackPlayer!\n";
         return;
     }
 
-    data->audioRenderer.renderAudio(static_cast<float*>(pOutput), frameCount);
+    player->audioRenderer.renderAudio(static_cast<float*>(pOutput), frameCount);
 
     auto end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
     std::cout << "Callback duration: " << duration.count() << " microseconds\n";
-}
-
-AudioPlayer& AudioPlayer::getInstance () {
-
-    static AudioPlayer instance;
-    return instance;
 }
 
 void AudioPlayer::startPlayer () {
@@ -50,19 +44,6 @@ void AudioPlayer::stopPlayer () {
 
     ma_device_stop(&device_);
 }
-
-void AudioPlayer::switchPlayer () {
-
-    if(isDevicePlaying_) {
-
-        stopPlayer();
-    }
-    else {
-
-        startPlayer();
-    }
-}
-
 
 SyncStaticPlayCursors& AudioPlayer::getStaticPlayCursors () {
 
@@ -77,20 +58,15 @@ SyncDynamicPlayCursors& AudioPlayer::getDynamicPlayCursors () {
 
 void AudioPlayer::initDevice () {
 
-    static CallbackData data {
-
-        .audioRenderer = audioRenderer,
-    };
-
     ma_device_config config = ma_device_config_init(ma_device_type_playback);
     config.playback.format = ma_format_f32;
     config.playback.channels = 1;
     config.sampleRate = 48000;
     config.dataCallback = callbackPlayer;
-    config.pUserData = &data;
+    config.pUserData = this;
 
     if (ma_device_init(NULL, &config, &device_) != MA_SUCCESS) {
-        
+
         std::cerr << "An error occured during device initialization!\n";
         return;
     }

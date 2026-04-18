@@ -7,6 +7,9 @@
 #include "raylib.h"
 
 
+class AudioPlayer;
+
+
 struct Listener {
 
     fc::Vector3f position = fc::Vector3f(0.f, 0.f, 0.f);
@@ -21,10 +24,10 @@ public:
 
 public:
 
-    SimulationManager () = default;
+    explicit SimulationManager (AudioPlayer &player);
 
-    SimulationManager (const SimulationManager&) = default;
-    SimulationManager& operator= (const SimulationManager&) = default;
+    SimulationManager (const SimulationManager&) = delete;
+    SimulationManager& operator= (const SimulationManager&) = delete;
 
     template <typename CollisionFunc>
     void listenAroundCam (CollisionFunc collisionFunc) const;
@@ -43,6 +46,10 @@ private:
     float  calcVolume (float distance) const;
 
     std::vector <Ray> genRaysAroundCam (int numRays) const;
+
+private:
+
+    AudioPlayer *player_;
 };
 
 

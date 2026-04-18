@@ -25,12 +25,6 @@ Audio::size_type Audio::size () const {
 }
 
 
-AudioStorage& AudioStorage::getInstance () {
-
-    static AudioStorage instance;
-    return instance;
-}
-
 AudioStorage::Handle AudioStorage::loadAudio (const std::string &samplePath) {
 
     std::vector <float> samples;

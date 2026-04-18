@@ -7,6 +7,10 @@
 #include <vector>
 
 
+SimulationManager::SimulationManager (AudioPlayer &player):
+  player_(&player) {}
+
+
 double SimulationManager::calcPosOffset (double distance) const {
 
     return -distance / SoundSpeed * 48000;

@@ -2,7 +2,8 @@
 #include "SimulationManager.hpp"
 
 
-Game::Game (int screenWidth, int screenHeight):
+Game::Game (int screenWidth, int screenHeight, AudioPlayer &player):
+  simulationManager(player),
   screenWidth_(screenWidth),
   screenHeight_(screenHeight) {
 

@@ -10,9 +10,9 @@
 #include <vector>
 
 
-int main () {    
+int main () {
 
-    AudioStorage& audioStorage = AudioStorage::getInstance();
+    AudioStorage audioStorage;
 
     std::vector <std::string> soundPaths = {
         APP_RESOURCES_ROOT "7NA.mp3",
@@ -26,7 +26,9 @@ int main () {
         audio.push_back(audioStorage.loadAudio(soundPath));
     }
 
-    Game game(1280, 720);
+    AudioPlayer player;
+
+    Game game(1280, 720, player);
 
     std::vector <Scene::Box> boxes = {
 
@@ -131,7 +133,6 @@ int main () {
     }
 
 
-    AudioPlayer &player = AudioPlayer::getInstance();
     SyncStaticPlayCursors::MainView mainView = player.getStaticPlayCursors().getMainView();
     std::vector <SyncStaticPlayCursors::Handle> playerHandles;
     for (auto audioHandle: audio) {

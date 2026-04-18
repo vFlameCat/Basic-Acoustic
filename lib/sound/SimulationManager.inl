@@ -6,7 +6,7 @@
 template <typename CollisionFunc>
 void SimulationManager::listenAroundCam (CollisionFunc collisionFunc) const {
 
-    SyncDynamicPlayCursors::FrameWriter players = AudioPlayer::getInstance().getDynamicPlayCursors().getFrameWriter();
+    SyncDynamicPlayCursors::FrameWriter players = player_->getDynamicPlayCursors().getFrameWriter();
 
     for (const auto &source: audioSources) {
 

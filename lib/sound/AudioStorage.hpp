@@ -43,20 +43,18 @@ public:
     };
 
 
+    AudioStorage () = default;
+
     AudioStorage (const AudioStorage&) = delete;
     AudioStorage& operator= (const AudioStorage&) = delete;
-    
 
-    static AudioStorage& getInstance ();
 
     [[nodiscard]] Handle loadAudio (const std::string &samplePath);
     void unloadAudio (Handle handle);
-    
+
     const Audio& getAudio (Handle handle) const;
 
 private:
-
-    AudioStorage () = default;
 
     int decodeAndLoadFloatSamples (const std::string &samplePath, std::vector <float> &samples) const;
 
