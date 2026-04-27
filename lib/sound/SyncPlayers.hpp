@@ -123,16 +123,19 @@ public:
     };
 
     class FrameRenderer {
-    
+
     public:
 
-        explicit FrameRenderer (SyncDynamicPlayCursors &playCursors, const SyncStaticPlayCursors::RenderView &renderView);
+        explicit FrameRenderer (SyncDynamicPlayCursors &playCursors);
+
+        void buildPlayCursors (const SyncStaticPlayCursors::RenderView &renderView);
 
         std::vector<PlayCursor>& getPlayCursors () const;
-    
+
     private:
 
         SyncDynamicPlayCursors &playCursors_;
+        bool isNewCursors_;
     };
 
 public:
@@ -140,7 +143,7 @@ public:
     SyncDynamicPlayCursors () = default;
 
     FrameWriter getFrameWriter ();
-    FrameRenderer getFrameRenderer (const SyncStaticPlayCursors::RenderView &renderView);
+    FrameRenderer getFrameRenderer ();
 
 private:
 

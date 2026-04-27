@@ -92,10 +92,13 @@ void SyncDynamicPlayCursors::FrameWriter::addPlayCursor (DynamicPlayerCreateInfo
 
 
 
-SyncDynamicPlayCursors::FrameRenderer::FrameRenderer (SyncDynamicPlayCursors &playCursors, const SyncStaticPlayCursors::RenderView &renderView):
-  playCursors_(playCursors) {
+SyncDynamicPlayCursors::FrameRenderer::FrameRenderer (SyncDynamicPlayCursors &playCursors):
+  playCursors_(playCursors),
+  isNewCursors_(playCursors.buf_.fetch()) {}
 
-    if(!playCursors_.buf_.fetch()) 
+void SyncDynamicPlayCursors::FrameRenderer::buildPlayCursors (const SyncStaticPlayCursors::RenderView &renderView) {
+
+    if (!isNewCursors_)
         return;
 
     playCursors_.playCursors_.clear();
@@ -122,7 +125,7 @@ SyncDynamicPlayCursors::FrameWriter SyncDynamicPlayCursors::getFrameWriter () {
     return FrameWriter(*this);
 }
 
-SyncDynamicPlayCursors::FrameRenderer SyncDynamicPlayCursors::getFrameRenderer (const SyncStaticPlayCursors::RenderView &renderView) {
+SyncDynamicPlayCursors::FrameRenderer SyncDynamicPlayCursors::getFrameRenderer () {
 
-    return FrameRenderer(*this, renderView);
+    return FrameRenderer(*this);
 }

@@ -13,8 +13,12 @@ AudioRenderer::AudioRenderer () {
 
 void AudioRenderer::renderAudio (float *pOutput, uint32_t frameCount) {
 
+    // The order of acuaring FrameRenderer and RenderView is important.
+    // Main thread firstly update staticPlayCursors and then dynamic
+    // so to avoid data race in audio thread we need to acuarie dynamicPlayCursors first.
+    SyncDynamicPlayCursors::FrameRenderer frameRenderer = dynamicPlayCursors.getFrameRenderer();
     SyncStaticPlayCursors::RenderView renderView = staticPlayCursors.getRenderView();
-    SyncDynamicPlayCursors::FrameRenderer frameRenderer = dynamicPlayCursors.getFrameRenderer(renderView);
+    frameRenderer.buildPlayCursors(renderView);
 
     std::vector<PlayCursor> &staticPlayers = renderView.getPlayCursors();
     std::vector<PlayCursor> &dynamicPlayers = frameRenderer.getPlayCursors();
