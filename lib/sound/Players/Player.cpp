@@ -1,9 +1,9 @@
-#include "PlayCursor.hpp"
+#include "Player.hpp"
 
 #include <cmath>
 
 
-PlayCursor::PlayCursor (CreateInfo info):
+Player::Player (CreateInfo info):
   pitch    (info.pitch),
   volume   (info.volume),
   pos_     (info.pos),
@@ -13,7 +13,7 @@ PlayCursor::PlayCursor (CreateInfo info):
 }
 
 
-PlayCursor::CreateInfo PlayCursor::getInfo () const {
+Player::CreateInfo Player::getInfo () const {
 
     return CreateInfo {
         .pos       = pos_,
@@ -28,7 +28,7 @@ PlayCursor::CreateInfo PlayCursor::getInfo () const {
 // (1) lerp between two closest samples to the pos_ + posOffset_
 // (2) for performance purposes assumes that pos_ + posOffset_
 //     won't change more than on audio_->size()
-float PlayCursor::getSample () const {
+float Player::getSample () const {
 
     if (!isLooped_) {
 
@@ -38,7 +38,7 @@ float PlayCursor::getSample () const {
     return getSampleInLoopedSound();
 }
 
-float PlayCursor::getSampleInLoopedSound () const {
+float Player::getSampleInLoopedSound () const {
 
     Audio::size_type size = audio_->size();
 
@@ -59,7 +59,7 @@ float PlayCursor::getSampleInLoopedSound () const {
     return std::lerp((*audio_)[flooredAdvance], (*audio_)[flooredAdvance + 1], t) * volume;
 }
 
-float PlayCursor::getSampleInUnloopedSound () const {
+float Player::getSampleInUnloopedSound () const {
 
     Audio::size_type size = audio_->size();
 
@@ -75,7 +75,7 @@ float PlayCursor::getSampleInUnloopedSound () const {
     return std::lerp((*audio_)[flooredAdvance], (*audio_)[flooredAdvance + 1], t) * volume;
 }
 
-void PlayCursor::advance () {
+void Player::advance () {
 
     pos_ += pitch;
 }

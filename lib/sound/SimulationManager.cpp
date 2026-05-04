@@ -3,12 +3,12 @@
 #include <Vector3.hpp>
 #include <cmath>
 #include <numbers>
-#include <AudioPlayer.hpp>
+#include <AudioEngine.hpp>
 #include <vector>
 
 
-SimulationManager::SimulationManager (AudioPlayer &player):
-  player_(&player) {}
+SimulationManager::SimulationManager (AudioEngine &engine):
+  engine_(&engine) {}
 
 
 double SimulationManager::calcPosOffset (double distance) const {

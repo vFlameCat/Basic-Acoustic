@@ -1,9 +1,10 @@
 #include <AudioSourcesStorage.hpp>
 #include <AudioStorage.hpp>
 #include <Game.hpp>
-#include <AudioPlayer.hpp>
+#include <AudioEngine.hpp>
 #include <SimulationManager.hpp>
-#include <SyncPlayers.hpp>
+#include <Players/PlayersPool.hpp>
+#include <Players/SpatialFramePlayers.hpp>
 
 #include <raylib.h>
 
@@ -26,9 +27,9 @@ int main () {
         audio.push_back(audioStorage.load(soundPath));
     }
 
-    AudioPlayer player;
+    AudioEngine engine;
 
-    Game game(1280, 720, player);
+    Game game(1280, 720, engine);
 
     std::vector <Scene::Box> boxes = {
 
@@ -133,11 +134,11 @@ int main () {
     }
 
 
-    SyncStaticPlayCursors::MainView mainView = player.getStaticPlayCursors().getMainView();
-    std::vector <SyncStaticPlayCursors::Handle> playerHandles;
+    PlayersPool::Writer poolWriter = engine.getPlayersPool().getWriter();
+    std::vector <PlayersPool::Handle> playerHandles;
     for (auto audioHandle: audio) {
 
-        SyncStaticPlayCursors::Handle handle = mainView.addPlayCursor(PlayCursor::CreateInfo{.volume = 0.f, .audio = audioStorage.get(audioHandle)});
+        PlayersPool::Handle handle = poolWriter.addPlayer(Player::CreateInfo{.volume = 0.f, .audio = audioStorage.get(audioHandle)});
         playerHandles.push_back(handle);
     }
 
@@ -149,6 +150,6 @@ int main () {
 
 
 
-    player.startPlayer();
+    engine.start();
     game.run();
 }

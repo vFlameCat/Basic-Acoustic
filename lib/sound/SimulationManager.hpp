@@ -2,12 +2,13 @@
 
 
 #include <AudioSourcesStorage.hpp>
+#include <Players/SpatialFramePlayers.hpp>
 #include <Vector3.hpp>
 
 #include "raylib.h"
 
 
-class AudioPlayer;
+class AudioEngine;
 
 
 struct Listener {
@@ -24,7 +25,7 @@ public:
 
 public:
 
-    explicit SimulationManager (AudioPlayer &player);
+    explicit SimulationManager (AudioEngine &engine);
 
     SimulationManager (const SimulationManager&) = delete;
     SimulationManager& operator= (const SimulationManager&) = delete;
@@ -40,7 +41,7 @@ public:
 private:
 
     template <typename CollisionFunc>
-    void traceAudioSources (SyncDynamicPlayCursors::FrameWriter &players, Ray ray, CollisionFunc collisionFunc, int depth = 10) const;
+    void traceAudioSources (SpatialFramePlayers::Writer &players, Ray ray, CollisionFunc collisionFunc, int depth = 10) const;
 
     double calcPosOffset (double distance) const;
     float  calcVolume (float distance) const;
@@ -49,7 +50,7 @@ private:
 
 private:
 
-    AudioPlayer *player_;
+    AudioEngine *engine_;
 };
 
 

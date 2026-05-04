@@ -1,10 +1,12 @@
 add_library(sound
     AudioStorage.cpp
     SimulationManager.cpp
-    AudioPlayer.cpp
-    PlayCursor.cpp
-    SyncPlayers.cpp
+    AudioEngine.cpp
     AudioRenderer.cpp
+
+    Players/Player.cpp
+    Players/PlayersPool.cpp
+    Players/SpatialFramePlayers.cpp
 )
 
 target_link_libraries(sound PUBLIC miniaudio vector3 concurrency containers)

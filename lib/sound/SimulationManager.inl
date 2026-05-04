@@ -1,12 +1,12 @@
-#include "SyncPlayers.hpp"
+#include <Players/SpatialFramePlayers.hpp>
 #include <SimulationManager.hpp>
-#include <AudioPlayer.hpp>
+#include <AudioEngine.hpp>
 
 
 template <typename CollisionFunc>
 void SimulationManager::listenAroundCam (CollisionFunc collisionFunc) const {
 
-    SyncDynamicPlayCursors::FrameWriter players = player_->getDynamicPlayCursors().getFrameWriter();
+    SpatialFramePlayers::Writer players = engine_->getSpatialFramePlayers().getWriter();
 
     for (const auto &source: audioSources) {
 
@@ -17,7 +17,7 @@ void SimulationManager::listenAroundCam (CollisionFunc collisionFunc) const {
         fc::Vector3f dirToSource = sourcePos - rayPos;
         RayCollision collisionToSource = collisionFunc(Ray{rayPos, dirToSource.normalize()});
 
-        SyncDynamicPlayCursors::DynamicPlayerCreateInfo info;
+        SpatialFramePlayers::PlayerCreateInfo info;
         info.playerHandle = source.handle;
         info.posOffset = calcPosOffset(distanceToSource);
         info.volume = calcVolume(distanceToSource);
@@ -27,7 +27,7 @@ void SimulationManager::listenAroundCam (CollisionFunc collisionFunc) const {
             info.volume *= 0.1f;
         }
 
-        players.addPlayCursor(info);
+        players.addPlayer(info);
     }
 
     std::vector <Ray> rays = genRaysAroundCam(32);      // TODO: could be optimized
@@ -38,7 +38,7 @@ void SimulationManager::listenAroundCam (CollisionFunc collisionFunc) const {
 }
 
 template <typename CollisionFunc>
-void SimulationManager::traceAudioSources (SyncDynamicPlayCursors::FrameWriter &players, Ray ray, CollisionFunc collisionFunc, int depth) const {
+void SimulationManager::traceAudioSources (SpatialFramePlayers::Writer &players, Ray ray, CollisionFunc collisionFunc, int depth) const {
 
     Ray curRay = ray;
 
@@ -76,13 +76,13 @@ void SimulationManager::traceAudioSources (SyncDynamicPlayCursors::FrameWriter &
 
                 float totalDistance = curPathLength + distanceToSource;
 
-                SyncDynamicPlayCursors::DynamicPlayerCreateInfo info;
+                SpatialFramePlayers::PlayerCreateInfo info;
                 info.playerHandle = source.handle;
                 info.posOffset = calcPosOffset(totalDistance);
                 info.volume = calcVolume(totalDistance);
                 info.volume *= curVolumeDecr;
 
-                players.addPlayCursor(info);
+                players.addPlayer(info);
             }
         }
     }

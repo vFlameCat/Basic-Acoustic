@@ -1,5 +1,6 @@
-#include "PlayCursor.hpp"
-#include "SyncPlayers.hpp"
+#include <Players/Player.hpp>
+#include <Players/PlayersPool.hpp>
+#include <Players/SpatialFramePlayers.hpp>
 #include <AudioRenderer.hpp>
 
 #include <cstring>
@@ -13,17 +14,17 @@ AudioRenderer::AudioRenderer () {
 
 void AudioRenderer::renderAudio (float *pOutput, uint32_t frameCount) {
 
-    // The order of acuaring FrameRenderer and RenderView is important.
-    // Main thread firstly update staticPlayCursors and then dynamic
-    // so to avoid data race in audio thread we need to acuarie dynamicPlayCursors first.
-    SyncDynamicPlayCursors::FrameRenderer frameRenderer = dynamicPlayCursors.getFrameRenderer();
-    SyncStaticPlayCursors::RenderView renderView = staticPlayCursors.getRenderView();
-    frameRenderer.buildPlayCursors(renderView);
+    // The order of acquiring frame reader and pool reader is important.
+    // Main thread firstly updates playersPool and then spatialFramePlayers,
+    // so to avoid data race in audio thread we need to acquire spatial frame first.
+    SpatialFramePlayers::Reader spatialReader = spatialFramePlayers.getReader();
+    PlayersPool::Reader poolReader  = playersPool.getReader();
+    spatialReader.buildPlayers(poolReader);
 
-    fc::SlotPool<PlayCursor> &staticPlayers = renderView.getPlayCursors();
-    std::vector<PlayCursor> &dynamicPlayers = frameRenderer.getPlayCursors();
+    fc::SlotPool<Player> &poolPlayers  = poolReader.getPlayers();
+    std::vector<Player>  &spatialPlayers = spatialReader.getPlayers();
 
-    render(pOutput, frameCount, staticPlayers, dynamicPlayers);
+    render(pOutput, frameCount, poolPlayers, spatialPlayers);
 
     const uint32_t overlapCount = frameCount / 2;
     for (uint32_t i = 0; i < overlapCount; ++i) {
@@ -34,49 +35,49 @@ void AudioRenderer::renderAudio (float *pOutput, uint32_t frameCount) {
         pOutput[i] = overlapBuf_[i] * fadeOut + pOutput[i] * fadeIn;
     }
 
-    renderWithoutAdvance(overlapBuf_.data(), overlapCount, staticPlayers, dynamicPlayers);
+    renderWithoutAdvance(overlapBuf_.data(), overlapCount, poolPlayers, spatialPlayers);
 }
 
-void AudioRenderer::render (float *pOutput, uint32_t frameCount, fc::SlotPool<PlayCursor> &staticPlayers, std::vector<PlayCursor> &dynamicPlayers) {
+void AudioRenderer::render (float *pOutput, uint32_t frameCount, fc::SlotPool<Player> &poolPlayers, std::vector<Player> &spatialPlayers) {
 
     memset(pOutput, 0, frameCount * sizeof(float));
 
-    renderPlayCursors(pOutput, frameCount, staticPlayers);
-    renderPlayCursors(pOutput, frameCount, dynamicPlayers);
+    renderPlayers(pOutput, frameCount, poolPlayers);
+    renderPlayers(pOutput, frameCount, spatialPlayers);
 }
 
 template <typename Container>
-void AudioRenderer::renderPlayCursors (float *pOutput, uint32_t frameCount, Container &players) {
+void AudioRenderer::renderPlayers (float *pOutput, uint32_t frameCount, Container &players) {
 
-    for (auto& playCursor: players) {
+    for (auto& player: players) {
 
         for (uint32_t i = 0; i < frameCount; ++i) {
 
-            pOutput[i] += playCursor.getSample();
-            playCursor.advance();
+            pOutput[i] += player.getSample();
+            player.advance();
         }
     }
 }
 
-void AudioRenderer::renderWithoutAdvance (float *pOutput, uint32_t frameCount, fc::SlotPool<PlayCursor> &staticPlayers, std::vector<PlayCursor> &dynamicPlayers) {
+void AudioRenderer::renderWithoutAdvance (float *pOutput, uint32_t frameCount, fc::SlotPool<Player> &poolPlayers, std::vector<Player> &spatialPlayers) {
 
     memset(pOutput, 0, frameCount * sizeof(float));
 
-    renderPlayCursorsWithoutAdvance(pOutput, frameCount, staticPlayers);
-    renderPlayCursorsWithoutAdvance(pOutput, frameCount, dynamicPlayers);
+    renderPlayersWithoutAdvance(pOutput, frameCount, poolPlayers);
+    renderPlayersWithoutAdvance(pOutput, frameCount, spatialPlayers);
 }
 
 template <typename Container>
-void AudioRenderer::renderPlayCursorsWithoutAdvance (float *pOutput, uint32_t frameCount, Container &players) {
+void AudioRenderer::renderPlayersWithoutAdvance (float *pOutput, uint32_t frameCount, Container &players) {
 
-    for (auto& playCursor: players) {
+    for (auto& player: players) {
 
-        double originalPos = playCursor.pos_;
+        double originalPos = player.pos_;
         for (uint32_t i = 0; i < frameCount; ++i) {
 
-            pOutput[i] += playCursor.getSample();
-            playCursor.advance();
+            pOutput[i] += player.getSample();
+            player.advance();
         }
-        playCursor.pos_ = originalPos;
+        player.pos_ = originalPos;
     }
 }

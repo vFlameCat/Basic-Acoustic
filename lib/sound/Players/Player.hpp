@@ -4,7 +4,7 @@
 #include <AudioStorage.hpp>
 
 
-class PlayCursor final {
+class Player final {
 
 public:
 
@@ -21,7 +21,7 @@ public:
         bool isLooped = true;
     };
 
-    PlayCursor (CreateInfo info);
+    Player (CreateInfo info);
 
     CreateInfo getInfo () const;
 

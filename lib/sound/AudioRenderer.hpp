@@ -5,7 +5,9 @@
 #include <array>
 #include <vector>
 
-#include <SyncPlayers.hpp>
+#include <Players/PlayersPool.hpp>
+#include <Players/SpatialFramePlayers.hpp>
+
 #include <containers/SlotPool.hpp>
 
 
@@ -19,19 +21,19 @@ public:
 
 public:
 
-    SyncStaticPlayCursors  staticPlayCursors;
-    SyncDynamicPlayCursors dynamicPlayCursors;
+    PlayersPool         playersPool;
+    SpatialFramePlayers spatialFramePlayers;
 
 private:
 
-    void render (float *pOutput, uint32_t frameCount, fc::SlotPool<PlayCursor> &staticPlayers, std::vector<PlayCursor> &dynamicPlayers);
-    void renderWithoutAdvance (float *pOutput, uint32_t frameCount, fc::SlotPool<PlayCursor> &staticPlayers, std::vector<PlayCursor> &dynamicPlayers);
+    void render (float *pOutput, uint32_t frameCount, fc::SlotPool<Player> &poolPlayers, std::vector<Player> &framePlayers);
+    void renderWithoutAdvance (float *pOutput, uint32_t frameCount, fc::SlotPool<Player> &poolPlayers, std::vector<Player> &framePlayers);
 
     template <typename Container>
-    void renderPlayCursors (float *pOutput, uint32_t frameCount, Container &players);
+    void renderPlayers (float *pOutput, uint32_t frameCount, Container &players);
 
     template <typename Container>
-    void renderPlayCursorsWithoutAdvance (float *pOutput, uint32_t frameCount, Container &players);
+    void renderPlayersWithoutAdvance (float *pOutput, uint32_t frameCount, Container &players);
 
     static constexpr uint32_t OVERLAP_BUF_SIZE = 500;
     std::array <float, OVERLAP_BUF_SIZE> overlapBuf_{};

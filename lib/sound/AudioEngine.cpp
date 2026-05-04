@@ -1,4 +1,4 @@
-#include <AudioPlayer.hpp>
+#include <AudioEngine.hpp>
 
 #include <iostream>
 #include <chrono>
@@ -6,63 +6,63 @@
 #include <cmath>
 
 
-AudioPlayer::AudioPlayer () {
+AudioEngine::AudioEngine () {
 
-    initDevice();  
+    initDevice();
 }
 
-AudioPlayer::~AudioPlayer () {
+AudioEngine::~AudioEngine () {
 
     ma_device_uninit(&device_);
 }
 
 
-void AudioPlayer::callbackPlayer (ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount) {
+void AudioEngine::callback (ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount) {
 
     auto start = std::chrono::high_resolution_clock::now();
 
-    AudioPlayer *player = static_cast<AudioPlayer*>(pDevice->pUserData);
-    if (!player) {
+    AudioEngine *engine = static_cast<AudioEngine*>(pDevice->pUserData);
+    if (!engine) {
 
-        std::cerr << "Error! No data in callbackPlayer!\n";
+        std::cerr << "Error! No data in AudioEngine callback!\n";
         return;
     }
 
-    player->audioRenderer.renderAudio(static_cast<float*>(pOutput), frameCount);
+    engine->renderer_.renderAudio(static_cast<float*>(pOutput), frameCount);
 
     auto end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
     std::cout << "Callback duration: " << duration.count() << " microseconds\n";
 }
 
-void AudioPlayer::startPlayer () {
+void AudioEngine::start () {
 
     ma_device_start(&device_);
 }
 
-void AudioPlayer::stopPlayer () {
+void AudioEngine::stop () {
 
     ma_device_stop(&device_);
 }
 
-SyncStaticPlayCursors& AudioPlayer::getStaticPlayCursors () {
+PlayersPool& AudioEngine::getPlayersPool () {
 
-    return audioRenderer.staticPlayCursors;
+    return renderer_.playersPool;
 }
 
-SyncDynamicPlayCursors& AudioPlayer::getDynamicPlayCursors () {
+SpatialFramePlayers& AudioEngine::getSpatialFramePlayers () {
 
-    return audioRenderer.dynamicPlayCursors;
+    return renderer_.spatialFramePlayers;
 }
 
 
-void AudioPlayer::initDevice () {
+void AudioEngine::initDevice () {
 
     ma_device_config config = ma_device_config_init(ma_device_type_playback);
     config.playback.format = ma_format_f32;
     config.playback.channels = 1;
     config.sampleRate = 48000;
-    config.dataCallback = callbackPlayer;
+    config.dataCallback = callback;
     config.pUserData = this;
 
     if (ma_device_init(NULL, &config, &device_) != MA_SUCCESS) {

@@ -6,14 +6,14 @@
 #include <SimulationManager.hpp>
 
 
-class AudioPlayer;
+class AudioEngine;
 
 
 class Game final {
 
 public:
 
-    Game (int screenWidth, int screenHeight, AudioPlayer &player);
+    Game (int screenWidth, int screenHeight, AudioEngine &engine);
 
     Game (const Game&) = delete;
     Game& operator= (const Game&) = delete;
