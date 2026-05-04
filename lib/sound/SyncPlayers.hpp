@@ -3,23 +3,19 @@
 
 #include <PlayCursor.hpp>
 
-#include <cstdint>
-#include <vector>
+#include <containers/SlotPool.hpp>
+#include <concurrency/SPSCQueue.hpp>
+#include <concurrency/TripleBuffer.hpp>
 
 #include <variant>
-#include <concurrency/SPSCQueue.hpp>
-
-#include <concurrency/TripleBuffer.hpp>
+#include <vector>
 
 
 class SyncStaticPlayCursors {
 
 public:
 
-    enum class Handle: uint32_t {
-
-        Invalid = uint32_t(-1)
-    };
+    using Handle = fc::SlotPool<PlayCursor>::Handle;
 
 private:
 
@@ -47,7 +43,7 @@ public:
         explicit MainView (SyncStaticPlayCursors &playCursors);
 
         Handle addPlayCursor (PlayCursor playCursor);
-        void removePlayCursor (Handle handle);
+        void   removePlayCursor (Handle handle);
 
     private:
 
@@ -62,14 +58,14 @@ public:
 
         PlayCursor::CreateInfo getPlayCursorInfo (Handle handle) const;
 
-        std::vector<PlayCursor>& getPlayCursors () const;
+        fc::SlotPool<PlayCursor>& getPlayCursors () const;
 
     private:
 
         template<class... Ts>
         struct overloads : Ts... { using Ts::operator()...; };
 
-        void parseCommandAdd (Command::Add &cmd);
+        void parseCommandAdd    (Command::Add &cmd);
         void parseCommandRemove (Command::Remove &cmd);
 
     private:
@@ -81,14 +77,16 @@ public:
 
     SyncStaticPlayCursors () = default;
 
-    MainView getMainView ();
+    MainView   getMainView ();
     RenderView getRenderView ();
 
 private:
 
-    Handle nextFreeHandle_ = static_cast<Handle>(0);
-
-    std::vector<PlayCursor> playCursors_;
+    // Main thread allocates handles via mainHandles_; the audio thread mirrors
+    // the same insert/erase sequence on playCursors_, so handles stay consistent.
+    // Both pools share Tag = PlayCursor so their Handle types are identical.
+    fc::SlotPool<std::monostate, PlayCursor> mainHandles_;
+    fc::SlotPool<PlayCursor>                 playCursors_;
 
     SPSCQueue<Command, 1024> cmdQueue_;
 };
@@ -103,11 +101,11 @@ public:
 
         SyncStaticPlayCursors::Handle playerHandle = SyncStaticPlayCursors::Handle::Invalid;
         double posOffset = 0.;
-        float volume = 0.f;
+        float  volume    = 0.f;
     };
 
     class FrameWriter {
-    
+
     public:
 
         explicit FrameWriter (SyncDynamicPlayCursors &playCursors);
@@ -115,7 +113,7 @@ public:
         ~FrameWriter ();
 
         void addPlayCursor (DynamicPlayerCreateInfo info) const;
-    
+
     private:
 
         SyncDynamicPlayCursors &playCursors_;
@@ -142,7 +140,7 @@ public:
 
     SyncDynamicPlayCursors () = default;
 
-    FrameWriter getFrameWriter ();
+    FrameWriter   getFrameWriter ();
     FrameRenderer getFrameRenderer ();
 
 private:

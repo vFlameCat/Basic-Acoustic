@@ -3,10 +3,11 @@
 
 #include <miniaudio.hpp>
 
+#include <containers/SlotPool.hpp>
+
 #include <string>
 #include <vector>
 #include <memory>
-#include <cstdint>
 
 
 class Audio {
@@ -18,7 +19,7 @@ public:
 
     Audio (std::vector <float> &&samples);
 
-    
+
     // it is correct to take pos + 1 for any correct pos! (for looped sound processing performance)
     // the last sample is equal to the first
     float operator[] (std::size_t pos) const;
@@ -37,10 +38,7 @@ class AudioStorage final {
 
 public:
 
-    enum class Handle: uint32_t {
-
-        Invalid = uint32_t(-1)
-    };
+    using Handle = fc::SlotPool<std::unique_ptr<Audio>>::Handle;
 
 
     AudioStorage () = default;
@@ -49,10 +47,10 @@ public:
     AudioStorage& operator= (const AudioStorage&) = delete;
 
 
-    [[nodiscard]] Handle loadAudio (const std::string &samplePath);
-    void unloadAudio (Handle handle);
+    [[nodiscard]] Handle load (const std::string &samplePath);
+    void unload (Handle handle);
 
-    const Audio& getAudio (Handle handle) const;
+    const Audio& get (Handle handle) const;
 
 private:
 
@@ -60,5 +58,5 @@ private:
 
 private:
 
-    std::vector<std::unique_ptr<Audio>> storage_{};
+    fc::SlotPool<std::unique_ptr<Audio>> storage_{};
 };

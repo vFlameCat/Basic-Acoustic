@@ -1,39 +1,45 @@
 #include "PlayCursor.hpp"
 #include <SyncPlayers.hpp>
 #include <AudioPlayer.hpp>
-#include <cstdint>
+
+#include <cassert>
 #include <vector>
 
 
-SyncStaticPlayCursors::MainView::MainView (SyncStaticPlayCursors &playCursors): 
+SyncStaticPlayCursors::MainView::MainView (SyncStaticPlayCursors &playCursors):
   playCursors_(playCursors) {}
 
 SyncStaticPlayCursors::Handle SyncStaticPlayCursors::MainView::addPlayCursor (PlayCursor playCursor) {
 
-    playCursors_.cmdQueue_.push(Command{ Command::Add { playCursor }});
+    Handle handle = playCursors_.mainHandles_.insert(std::monostate{});
 
-    Handle handle = playCursors_.nextFreeHandle_;
-    playCursors_.nextFreeHandle_ = static_cast<Handle>(static_cast<uint32_t>(playCursors_.nextFreeHandle_) + 1);
+    bool pushed = playCursors_.cmdQueue_.push(Command{ Command::Add{ playCursor }});
+    assert(pushed && "SyncStaticPlayCursors command queue overflow on add");
+    (void) pushed;
 
     return handle;
 }
 
 void SyncStaticPlayCursors::MainView::removePlayCursor (Handle handle) {
 
-    playCursors_.cmdQueue_.push(Command{ Command::Remove { handle }});
+    if (!playCursors_.mainHandles_.erase(handle)) return;
+
+    bool pushed = playCursors_.cmdQueue_.push(Command{ Command::Remove{ handle }});
+    assert(pushed && "SyncStaticPlayCursors command queue overflow on remove");
+    (void) pushed;
 }
 
 
 
-SyncStaticPlayCursors::RenderView::RenderView (SyncStaticPlayCursors &playCursors): 
+SyncStaticPlayCursors::RenderView::RenderView (SyncStaticPlayCursors &playCursors):
   playCursors_(playCursors) {
 
     Command cmd;
     while (playCursors_.cmdQueue_.pop(cmd)) {
         std::visit(overloads {
-            
+
             [](std::monostate) {},
-            [this](Command::Add &cmd)    { parseCommandAdd(cmd); },
+            [this](Command::Add    &cmd) { parseCommandAdd(cmd); },
             [this](Command::Remove &cmd) { parseCommandRemove(cmd); },
         }, cmd.data);
     }
@@ -41,22 +47,22 @@ SyncStaticPlayCursors::RenderView::RenderView (SyncStaticPlayCursors &playCursor
 
 PlayCursor::CreateInfo SyncStaticPlayCursors::RenderView::getPlayCursorInfo (Handle handle) const {
 
-    return playCursors_.playCursors_[static_cast<uint32_t>(handle)].getInfo();
+    return playCursors_.playCursors_.get(handle).getInfo();
 }
 
-std::vector<PlayCursor>& SyncStaticPlayCursors::RenderView::getPlayCursors () const {
+fc::SlotPool<PlayCursor>& SyncStaticPlayCursors::RenderView::getPlayCursors () const {
 
     return playCursors_.playCursors_;
 }
 
 void SyncStaticPlayCursors::RenderView::parseCommandAdd (Command::Add &cmd) {
 
-    playCursors_.playCursors_.emplace_back(cmd.playCursor);
+    playCursors_.playCursors_.insert(cmd.playCursor);
 }
 
 void SyncStaticPlayCursors::RenderView::parseCommandRemove (Command::Remove &cmd) {
 
-    // Not implemented
+    playCursors_.playCursors_.erase(cmd.handle);
 }
 
 
@@ -74,7 +80,7 @@ SyncStaticPlayCursors::RenderView SyncStaticPlayCursors::getRenderView () {
 
 
 
-SyncDynamicPlayCursors::FrameWriter::FrameWriter (SyncDynamicPlayCursors &playCursors): 
+SyncDynamicPlayCursors::FrameWriter::FrameWriter (SyncDynamicPlayCursors &playCursors):
   playCursors_(playCursors), writeBuf_(playCursors.buf_.getWriteBuffer()) {
 
     writeBuf_.clear();
@@ -101,15 +107,17 @@ void SyncDynamicPlayCursors::FrameRenderer::buildPlayCursors (const SyncStaticPl
     if (!isNewCursors_)
         return;
 
+    fc::SlotPool<PlayCursor> &staticPool = renderView.getPlayCursors();
+
     playCursors_.playCursors_.clear();
     std::vector<DynamicPlayerCreateInfo> &playersInfo = playCursors_.buf_.getReadBuffer();
-    for (DynamicPlayerCreateInfo dynamicInfo : playersInfo) {
+    for (const DynamicPlayerCreateInfo &dynamicInfo : playersInfo) {
 
-        PlayCursor::CreateInfo info = renderView.getPlayCursorInfo(dynamicInfo.playerHandle);
+        PlayCursor::CreateInfo info = staticPool.get(dynamicInfo.playerHandle).getInfo();
         info.posOffset = dynamicInfo.posOffset;
-        info.volume = dynamicInfo.volume;
+        info.volume    = dynamicInfo.volume;
 
-        playCursors_.playCursors_.emplace_back(PlayCursor(info));
+        playCursors_.playCursors_.emplace_back(info);
     }
 }
 

@@ -1,5 +1,6 @@
 #include <AudioStorage.hpp>
 
+#include <cassert>
 #include <iostream>
 #include <utility>
 #include <vector>
@@ -25,7 +26,7 @@ Audio::size_type Audio::size () const {
 }
 
 
-AudioStorage::Handle AudioStorage::loadAudio (const std::string &samplePath) {
+AudioStorage::Handle AudioStorage::load (const std::string &samplePath) {
 
     std::vector <float> samples;
     if (decodeAndLoadFloatSamples(samplePath, samples)) {
@@ -33,20 +34,17 @@ AudioStorage::Handle AudioStorage::loadAudio (const std::string &samplePath) {
         return Handle::Invalid;
     }
 
-    Handle handle = static_cast<Handle>(storage_.size());
-    storage_.emplace_back(std::make_unique<Audio>(std::move(samples)));
-
-    return handle;
+    return storage_.insert(std::make_unique<Audio>(std::move(samples)));
 }
 
-void AudioStorage::unloadAudio (Handle handle) {
+void AudioStorage::unload (Handle handle) {
 
-    storage_[static_cast<std::vector<std::unique_ptr<Audio>>::size_type>(handle)].reset();
+    storage_.erase(handle);
 }
 
-const Audio& AudioStorage::getAudio (Handle handle) const {
+const Audio& AudioStorage::get (Handle handle) const {
 
-    return *storage_[static_cast<std::vector<std::unique_ptr<Audio>>::size_type>(handle)];
+    return *storage_.get(handle);
 }
 
 int AudioStorage::decodeAndLoadFloatSamples (const std::string &samplePath, std::vector <float> &samples) const {
@@ -78,7 +76,7 @@ int AudioStorage::decodeAndLoadFloatSamples (const std::string &samplePath, std:
 
         std::cerr << "An error occured during loading audio: " + samplePath + " !\n";
         return -1;
-    }    
+    }
     samples[frameCount] = samples[0];   // so we can process looped audios more effectively
 
     return 0;

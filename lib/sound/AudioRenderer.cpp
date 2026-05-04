@@ -20,7 +20,7 @@ void AudioRenderer::renderAudio (float *pOutput, uint32_t frameCount) {
     SyncStaticPlayCursors::RenderView renderView = staticPlayCursors.getRenderView();
     frameRenderer.buildPlayCursors(renderView);
 
-    std::vector<PlayCursor> &staticPlayers = renderView.getPlayCursors();
+    fc::SlotPool<PlayCursor> &staticPlayers = renderView.getPlayCursors();
     std::vector<PlayCursor> &dynamicPlayers = frameRenderer.getPlayCursors();
 
     render(pOutput, frameCount, staticPlayers, dynamicPlayers);
@@ -37,7 +37,7 @@ void AudioRenderer::renderAudio (float *pOutput, uint32_t frameCount) {
     renderWithoutAdvance(overlapBuf_.data(), overlapCount, staticPlayers, dynamicPlayers);
 }
 
-void AudioRenderer::render (float *pOutput, uint32_t frameCount, std::vector<PlayCursor> &staticPlayers, std::vector<PlayCursor> &dynamicPlayers) {
+void AudioRenderer::render (float *pOutput, uint32_t frameCount, fc::SlotPool<PlayCursor> &staticPlayers, std::vector<PlayCursor> &dynamicPlayers) {
 
     memset(pOutput, 0, frameCount * sizeof(float));
 
@@ -45,7 +45,8 @@ void AudioRenderer::render (float *pOutput, uint32_t frameCount, std::vector<Pla
     renderPlayCursors(pOutput, frameCount, dynamicPlayers);
 }
 
-void AudioRenderer::renderPlayCursors (float *pOutput, uint32_t frameCount, std::vector<PlayCursor> &players) {
+template <typename Container>
+void AudioRenderer::renderPlayCursors (float *pOutput, uint32_t frameCount, Container &players) {
 
     for (auto& playCursor: players) {
 
@@ -57,7 +58,7 @@ void AudioRenderer::renderPlayCursors (float *pOutput, uint32_t frameCount, std:
     }
 }
 
-void AudioRenderer::renderWithoutAdvance (float *pOutput, uint32_t frameCount, std::vector<PlayCursor> &staticPlayers, std::vector<PlayCursor> &dynamicPlayers) {
+void AudioRenderer::renderWithoutAdvance (float *pOutput, uint32_t frameCount, fc::SlotPool<PlayCursor> &staticPlayers, std::vector<PlayCursor> &dynamicPlayers) {
 
     memset(pOutput, 0, frameCount * sizeof(float));
 
@@ -65,7 +66,8 @@ void AudioRenderer::renderWithoutAdvance (float *pOutput, uint32_t frameCount, s
     renderPlayCursorsWithoutAdvance(pOutput, frameCount, dynamicPlayers);
 }
 
-void AudioRenderer::renderPlayCursorsWithoutAdvance (float *pOutput, uint32_t frameCount, std::vector<PlayCursor> &players) {
+template <typename Container>
+void AudioRenderer::renderPlayCursorsWithoutAdvance (float *pOutput, uint32_t frameCount, Container &players) {
 
     for (auto& playCursor: players) {
 

@@ -23,7 +23,7 @@ int main () {
     std::vector <AudioStorage::Handle> audio;
     for (const auto& soundPath: soundPaths) {
 
-        audio.push_back(audioStorage.loadAudio(soundPath));
+        audio.push_back(audioStorage.load(soundPath));
     }
 
     AudioPlayer player;
@@ -137,15 +137,15 @@ int main () {
     std::vector <SyncStaticPlayCursors::Handle> playerHandles;
     for (auto audioHandle: audio) {
 
-        SyncStaticPlayCursors::Handle handle = mainView.addPlayCursor(PlayCursor::CreateInfo{.volume = 0.f, .audio = audioStorage.getAudio(audioHandle)});
+        SyncStaticPlayCursors::Handle handle = mainView.addPlayCursor(PlayCursor::CreateInfo{.volume = 0.f, .audio = audioStorage.get(audioHandle)});
         playerHandles.push_back(handle);
     }
 
     for (size_t i = 0; i < audio.size(); ++i) {
 
-        game.simulationManager.audioSources.addAudioSource(AudioSource{spheres[i].center, playerHandles[i]});
+        game.simulationManager.audioSources.insert(AudioSource{spheres[i].center, playerHandles[i]});
     }
-    game.simulationManager.audioSources.addAudioSource(AudioSource{spheres[3].center, playerHandles[0]});
+    game.simulationManager.audioSources.insert(AudioSource{spheres[3].center, playerHandles[0]});
 
 
 

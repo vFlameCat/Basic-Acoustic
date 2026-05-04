@@ -10,8 +10,6 @@ void SimulationManager::listenAroundCam (CollisionFunc collisionFunc) const {
 
     for (const auto &source: audioSources) {
 
-        if (!source.isValid()) continue;
-
         fc::Vector3f rayPos(listener.position), sourcePos(source.position);
 
         float distanceToSource = fc::distance(rayPos, sourcePos);
@@ -66,8 +64,6 @@ void SimulationManager::traceAudioSources (SyncDynamicPlayCursors::FrameWriter &
         curVolumeDecr *= 0.6f;
 
         for (const auto &source: audioSources) {
-
-            if (!source.isValid()) continue;
 
             fc::Vector3f rayPos(curRay.position), sourcePos(source.position);
 
