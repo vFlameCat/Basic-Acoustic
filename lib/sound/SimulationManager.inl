@@ -1,3 +1,4 @@
+#include "raylib.h"
 #include <Players/SpatialFramePlayers.hpp>
 #include <SimulationManager.hpp>
 #include <AudioEngine.hpp>
@@ -6,46 +7,28 @@
 template <typename CollisionFunc>
 void SimulationManager::listenAroundCam (CollisionFunc collisionFunc) const {
 
-    SpatialFramePlayers::Writer players = engine_->getSpatialFramePlayers().getWriter();
+    SpatialFramePlayers::Writer players = engine_.getSpatialFramePlayers().getWriter();
 
-    for (const auto &source: audioSources) {
+    addContributionsAtPoint(players, listener.position, 0.f, 1.f, params_.occlusionAmp, collisionFunc);
 
-        fc::Vector3f rayPos(listener.position), sourcePos(source.position);
+    for (auto &ray: raysSphere_) {
 
-        float distanceToSource = fc::distance(rayPos, sourcePos);
-
-        fc::Vector3f dirToSource = sourcePos - rayPos;
-        RayCollision collisionToSource = collisionFunc(Ray{rayPos, dirToSource.normalize()});
-
-        SpatialFramePlayers::PlayerCreateInfo info;
-        info.playerHandle = source.handle;
-        info.posOffset = calcPosOffset(distanceToSource);
-        info.volume = calcVolume(distanceToSource);
-
-        if (collisionToSource.hit && distanceToSource >= collisionToSource.distance) {
-
-            info.volume *= 0.1f;
-        }
-
-        players.addPlayer(info);
-    }
-
-    std::vector <Ray> rays = genRaysAroundCam(32);      // TODO: could be optimized
-    for (auto ray: rays) {
-
-        traceAudioSources(players, ray, collisionFunc, 10);
+        Ray dir = Ray(Vector3(listener.position.x + ray.position.x, listener.position.y + ray.position.y, listener.position.z + ray.position.z), ray.direction);
+        traceAudioSources(players, dir, collisionFunc, params_.depth);
     }
 }
 
 template <typename CollisionFunc>
-void SimulationManager::traceAudioSources (SpatialFramePlayers::Writer &players, Ray ray, CollisionFunc collisionFunc, int depth) const {
+void SimulationManager::traceAudioSources (SpatialFramePlayers::Writer &players, Ray ray, CollisionFunc collisionFunc, uint32_t depth) const {
 
     Ray curRay = ray;
 
-    float curVolumeDecr = 1.f;
+    float curVolume = 1.f;
     float curPathLength = 0.f;
 
-    for (int curDepth = 0; curDepth < depth; ++curDepth) {
+    for (uint32_t curDepth = 0; curDepth < depth; ++curDepth) {
+
+        if (curVolume < params_.minVolume) break;
 
         RayCollision collision = collisionFunc(curRay);
         if (!collision.hit) {
@@ -61,29 +44,42 @@ void SimulationManager::traceAudioSources (SpatialFramePlayers::Writer &players,
         curRay.position = fc::Vector3f(collision.point) + reflectDir * 0.1f;
         curRay.direction = reflectDir;
 
-        curVolumeDecr *= 0.6f;
+        curVolume *= params_.reflectionAmp;
 
-        for (const auto &source: audioSources) {
+        addContributionsAtPoint(players, fc::Vector3f(curRay.position), curPathLength, curVolume * perRayAmpWeight_, 0.f, collisionFunc);
+    }
+}
 
-            fc::Vector3f rayPos(curRay.position), sourcePos(source.position);
+template <typename CollisionFunc>
+void SimulationManager::addContributionsAtPoint (SpatialFramePlayers::Writer &players,
+                                                 const fc::Vector3f &point,
+                                                 float pathLength,
+                                                 float volume,
+                                                 float occlusionFactor,
+                                                 CollisionFunc collisionFunc) const {
 
-            float distanceToSource = fc::distance(rayPos, sourcePos);
+    for (const auto &source: audioSources) {
 
-            fc::Vector3f dirToSource = sourcePos - rayPos;
-            RayCollision collisionToSource = collisionFunc(Ray{rayPos, dirToSource.normalize()});
+        fc::Vector3f sourcePos(source.position);
 
-            if (!collisionToSource.hit || distanceToSource < collisionToSource.distance) {
+        float distanceToSource = fc::distance(point, sourcePos);
 
-                float totalDistance = curPathLength + distanceToSource;
+        fc::Vector3f dirToSource = sourcePos - point;
+        RayCollision collisionToSource = collisionFunc(Ray{point, dirToSource.normalize()});
 
-                SpatialFramePlayers::PlayerCreateInfo info;
-                info.playerHandle = source.handle;
-                info.posOffset = calcPosOffset(totalDistance);
-                info.volume = calcVolume(totalDistance);
-                info.volume *= curVolumeDecr;
+        bool occluded = collisionToSource.hit && distanceToSource >= collisionToSource.distance;
 
-                players.addPlayer(info);
-            }
-        }
+        if (occluded && occlusionFactor == 0.f) continue;
+
+        float totalDistance = pathLength + distanceToSource;
+
+        SpatialFramePlayers::PlayerCreateInfo info;
+        info.playerHandle = source.handle;
+        info.posOffset = calcPosOffset(totalDistance);
+        info.volume = calcVolume(totalDistance) * volume;
+
+        if (occluded) info.volume *= occlusionFactor;
+
+        players.addPlayer(info);
     }
 }

@@ -38,8 +38,8 @@ void SpatialFramePlayers::Reader::buildPlayers (const PlayersPool::Reader &poolR
     for (const PlayerCreateInfo &info : playersInfo) {
 
         Player::CreateInfo createInfo = pool.get(info.playerHandle).getInfo();
-        createInfo.posOffset = info.posOffset;
-        createInfo.volume    = info.volume;
+        createInfo.posOffset = info.posOffset;      // may be need to adjust these parameters
+        createInfo.volume    = info.volume;         // no to set them
 
         players_.players_.emplace_back(createInfo);
     }
