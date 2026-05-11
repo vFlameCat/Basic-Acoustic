@@ -31,8 +31,20 @@ void AudioEngine::callback (ma_device* pDevice, void* pOutput, const void* pInpu
     engine->renderer_.renderAudio(static_cast<float*>(pOutput), frameCount);
 
     auto end = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-    std::cout << "Callback duration: " << duration.count() << " microseconds\n";
+    const auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+
+    // Rolling average over the last kCallbackHistorySize callbacks. Ring buffer and
+    // running sum live on the audio thread only — only the result is published.
+    engine->callbackHistorySum_ -= engine->callbackHistory_[engine->callbackHistoryIdx_];
+    engine->callbackHistory_[engine->callbackHistoryIdx_] = duration;
+    engine->callbackHistorySum_ += duration;
+    engine->callbackHistoryIdx_ =
+        (engine->callbackHistoryIdx_ + 1) % AudioEngine::kCallbackHistorySize;
+
+    engine->lastCallbackDuration_.store(duration, std::memory_order_relaxed);
+    engine->avgCallbackDuration_.store(
+        engine->callbackHistorySum_ / AudioEngine::kCallbackHistorySize,
+        std::memory_order_relaxed);
 }
 
 void AudioEngine::start () {

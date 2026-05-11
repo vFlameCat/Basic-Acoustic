@@ -32,8 +32,11 @@ public:
 private:
 
     void drawScene ();
+    void drawDebugUI ();
 
 private:
+
+    AudioEngine &engine_;
 
     const int screenWidth_, screenHeight_;
 };
