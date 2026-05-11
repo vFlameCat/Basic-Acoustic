@@ -54,7 +54,9 @@ public:
 
 public:
 
-    SpatialFramePlayers () = default;
+    explicit SpatialFramePlayers (std::size_t capacity = 4096);
+
+    void reserve (std::size_t capacity);
 
     Writer getWriter ();
     Reader getReader ();

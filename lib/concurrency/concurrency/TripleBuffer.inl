@@ -31,3 +31,13 @@ T& TripleBuffer<T>::getReadBuffer () {
 
     return buffers_[readIdx_];
 }
+
+template <typename T>
+template <typename F>
+void TripleBuffer<T>::apply (F func) {
+
+    for (auto &buf : buffers_) {
+
+        func(buf);
+    }
+}

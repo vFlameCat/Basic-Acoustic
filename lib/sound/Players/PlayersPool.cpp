@@ -65,6 +65,18 @@ void PlayersPool::Reader::parseCommandRemove (Command::Remove &cmd) {
 
 
 
+PlayersPool::PlayersPool (std::size_t capacity) {
+
+    reserve(capacity);
+}
+
+void PlayersPool::reserve (std::size_t capacity) {
+
+    mainHandles_.reserve(capacity);
+    players_.reserve(capacity);
+}
+
+
 PlayersPool::Writer PlayersPool::getWriter () {
 
     return Writer(*this);

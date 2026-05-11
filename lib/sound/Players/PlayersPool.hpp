@@ -73,7 +73,9 @@ public:
 
 public:
 
-    PlayersPool () = default;
+    explicit PlayersPool (std::size_t capacity = 256);
+
+    void reserve (std::size_t capacity);
 
     Writer getWriter ();
     Reader getReader ();

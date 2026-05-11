@@ -52,6 +52,18 @@ std::vector<Player>& SpatialFramePlayers::Reader::getPlayers () const {
 
 
 
+SpatialFramePlayers::SpatialFramePlayers (std::size_t capacity) {
+
+    reserve(capacity);
+}
+
+void SpatialFramePlayers::reserve (std::size_t capacity) {
+
+    players_.reserve(capacity);
+    buf_.apply([capacity](std::vector<PlayerCreateInfo> &v) { v.reserve(capacity); });
+}
+
+
 SpatialFramePlayers::Writer SpatialFramePlayers::getWriter () {
 
     return Writer(*this);

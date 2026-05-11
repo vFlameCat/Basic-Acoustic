@@ -3,14 +3,13 @@
 #include <Players/SpatialFramePlayers.hpp>
 #include <AudioRenderer.hpp>
 
-#include <cstring>
+#include <algorithm>
+#include <cmath>
 #include <vector>
 
 
-AudioRenderer::AudioRenderer () {
-
-    overlapBuf_.fill(0.f);
-}
+AudioRenderer::AudioRenderer ():
+  overlapBuf_(INITIAL_OVERLAP_BUF_SIZE, 0.f) {}
 
 void AudioRenderer::renderAudio (float *pOutput, uint32_t frameCount) {
 
@@ -24,9 +23,14 @@ void AudioRenderer::renderAudio (float *pOutput, uint32_t frameCount) {
     fc::SlotPool<Player> &poolPlayers  = poolReader.getPlayers();
     std::vector<Player>  &spatialPlayers = spatialReader.getPlayers();
 
-    render(pOutput, frameCount, poolPlayers, spatialPlayers);
+    mixPlayers(pOutput, frameCount, poolPlayers, spatialPlayers);
 
     const uint32_t overlapCount = frameCount / 2;
+    if (overlapBuf_.size() < overlapCount) {
+
+        overlapBuf_.resize(overlapCount, 0.f);
+    }
+
     for (uint32_t i = 0; i < overlapCount; ++i) {
 
         float fadeIn = static_cast<float>(i) / overlapCount;
@@ -35,19 +39,26 @@ void AudioRenderer::renderAudio (float *pOutput, uint32_t frameCount) {
         pOutput[i] = overlapBuf_[i] * fadeOut + pOutput[i] * fadeIn;
     }
 
-    renderWithoutAdvance(overlapBuf_.data(), overlapCount, poolPlayers, spatialPlayers);
+    mixPlayersWithoutAdvance(overlapBuf_.data(), overlapCount, poolPlayers, spatialPlayers);
+
+    // Soft clip via tanh: keeps the summed signal in (-1, 1) so the driver
+    // never hard-clips on coherent peaks across many spatial reflections.
+    for (uint32_t i = 0; i < frameCount; ++i) {
+
+        pOutput[i] = std::tanh(pOutput[i]);
+    }
 }
 
-void AudioRenderer::render (float *pOutput, uint32_t frameCount, fc::SlotPool<Player> &poolPlayers, std::vector<Player> &spatialPlayers) {
+void AudioRenderer::mixPlayers (float *pOutput, uint32_t frameCount, fc::SlotPool<Player> &poolPlayers, std::vector<Player> &spatialPlayers) {
 
-    memset(pOutput, 0, frameCount * sizeof(float));
+    std::fill_n(pOutput, frameCount, 0.f);
 
-    renderPlayers(pOutput, frameCount, poolPlayers);
-    renderPlayers(pOutput, frameCount, spatialPlayers);
+    mix(pOutput, frameCount, poolPlayers);
+    mix(pOutput, frameCount, spatialPlayers);
 }
 
 template <typename Container>
-void AudioRenderer::renderPlayers (float *pOutput, uint32_t frameCount, Container &players) {
+void AudioRenderer::mix (float *pOutput, uint32_t frameCount, Container &players) {
 
     for (auto& player: players) {
 
@@ -59,16 +70,16 @@ void AudioRenderer::renderPlayers (float *pOutput, uint32_t frameCount, Containe
     }
 }
 
-void AudioRenderer::renderWithoutAdvance (float *pOutput, uint32_t frameCount, fc::SlotPool<Player> &poolPlayers, std::vector<Player> &spatialPlayers) {
+void AudioRenderer::mixPlayersWithoutAdvance (float *pOutput, uint32_t frameCount, fc::SlotPool<Player> &poolPlayers, std::vector<Player> &spatialPlayers) {
 
-    memset(pOutput, 0, frameCount * sizeof(float));
+    std::fill_n(pOutput, frameCount, 0.f);
 
-    renderPlayersWithoutAdvance(pOutput, frameCount, poolPlayers);
-    renderPlayersWithoutAdvance(pOutput, frameCount, spatialPlayers);
+    mixWithoutAdvance(pOutput, frameCount, poolPlayers);
+    mixWithoutAdvance(pOutput, frameCount, spatialPlayers);
 }
 
 template <typename Container>
-void AudioRenderer::renderPlayersWithoutAdvance (float *pOutput, uint32_t frameCount, Container &players) {
+void AudioRenderer::mixWithoutAdvance (float *pOutput, uint32_t frameCount, Container &players) {
 
     for (auto& player: players) {
 

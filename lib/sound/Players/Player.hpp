@@ -47,3 +47,6 @@ private:
 
     bool isLooped_;
 };
+
+
+#include "Player.inl"

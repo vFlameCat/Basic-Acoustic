@@ -21,6 +21,11 @@ public:
     bool fetch ();
     T& getReadBuffer ();
 
+    // Apply func to every internal buffer. Not thread-safe — call before
+    // producer/consumer threads start using the buffer.
+    template <typename F>
+    void apply (F func);
+
 private:
 
     T buffers_[3];
