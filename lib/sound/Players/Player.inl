@@ -3,6 +3,9 @@
 #include <cmath>
 
 
+namespace rta {
+
+
 // (1) lerp between two closest samples to the pos_ + posOffset_
 // (2) for performance purposes assumes that pos_ + posOffset_
 //     won't change more than on audio_->size()
@@ -57,3 +60,6 @@ inline float Player::getSampleInUnloopedSound () const {
 
     return std::lerp((*audio_)[flooredAdvance], (*audio_)[flooredAdvance + 1], t) * volume;
 }
+
+
+} // namespace rta

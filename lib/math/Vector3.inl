@@ -5,7 +5,7 @@
 #include <type_traits>
 
 
-namespace fc {
+namespace rta {
     
 
 template <typename T>
@@ -183,4 +183,4 @@ constexpr T distanceSquared (const Vector3<T> &left, const Vector3<T> &right) {
 }
 
 
-} // namespace fc
+} // namespace rta

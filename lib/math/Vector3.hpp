@@ -1,7 +1,7 @@
 #pragma once
 
 
-namespace fc {
+namespace rta {
 
 
 template <typename T>
@@ -78,7 +78,7 @@ constexpr T distanceSquared (const Vector3<T> &left, const Vector3<T> &right);
 using Vector3f = Vector3<float>;
 
 
-} // namespace fc
+} // namespace rta
 
 
 #include "Vector3.inl"

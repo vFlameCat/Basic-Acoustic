@@ -6,6 +6,9 @@
 #include <cmath>
 
 
+namespace rta {
+
+
 AudioEngine::AudioEngine () {
 
     initDevice();
@@ -83,3 +86,6 @@ void AudioEngine::initDevice () {
         return;
     }
 }
+
+
+} // namespace rta

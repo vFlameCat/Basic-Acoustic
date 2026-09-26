@@ -1,6 +1,9 @@
 #include "Player.hpp"
 
 
+namespace rta {
+
+
 Player::Player (CreateInfo info):
   pitch    (info.pitch),
   volume   (info.volume),
@@ -21,3 +24,6 @@ Player::CreateInfo Player::getInfo () const {
         .isLooped  = isLooped_,
     };
 }
+
+
+} // namespace rta

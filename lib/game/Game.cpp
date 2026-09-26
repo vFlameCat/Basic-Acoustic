@@ -7,7 +7,7 @@
 #include <imgui.h>
 
 
-Game::Game (int screenWidth, int screenHeight, AudioEngine &engine):
+Game::Game (int screenWidth, int screenHeight, rta::AudioEngine &engine):
   simulationManager(engine),
   engine_(engine),
   screenWidth_(screenWidth),
@@ -52,7 +52,7 @@ void Game::run () {
         }
 
         simulationManager.listener.position = fromRl(camera.position);
-        simulationManager.listenAroundCam([&scene = this->scene](const fc::Ray &ray) { return fromRl(scene.getRayCollisionBoxes(toRl(ray))); });
+        simulationManager.listenAroundCam([&scene = this->scene](const rta::Ray &ray) { return fromRl(scene.getRayCollisionBoxes(toRl(ray))); });
 
         drawScene();
     }

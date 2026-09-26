@@ -4,6 +4,9 @@
 #include <Ray.hpp>
 
 
+namespace rta {
+
+
 template <RayCaster CollisionFunc>
 void SimulationManager::listenAroundCam (CollisionFunc collisionFunc) const {
 
@@ -13,14 +16,14 @@ void SimulationManager::listenAroundCam (CollisionFunc collisionFunc) const {
 
     for (const auto &direction: sphereDirections_) {
 
-        traceAudioSources(players, fc::Ray{listener.position, direction}, collisionFunc, params_.depth);
+        traceAudioSources(players, Ray{listener.position, direction}, collisionFunc, params_.depth);
     }
 }
 
 template <RayCaster CollisionFunc>
-void SimulationManager::traceAudioSources (SpatialFramePlayers::Writer &players, fc::Ray ray, CollisionFunc collisionFunc, uint32_t depth) const {
+void SimulationManager::traceAudioSources (SpatialFramePlayers::Writer &players, Ray ray, CollisionFunc collisionFunc, uint32_t depth) const {
 
-    fc::Ray curRay = ray;
+    Ray curRay = ray;
 
     float curVolume = 1.f;
     float curPathLength = 0.f;
@@ -29,16 +32,16 @@ void SimulationManager::traceAudioSources (SpatialFramePlayers::Writer &players,
 
         if (curVolume < params_.minVolume) break;
 
-        fc::RayHit collision = collisionFunc(curRay);
+        RayHit collision = collisionFunc(curRay);
         if (!collision.hit) {
 
             break;
         }
 
-        curPathLength += fc::distance(curRay.origin, collision.point);
+        curPathLength += distance(curRay.origin, collision.point);
 
-        fc::Vector3f incidentDir = curRay.direction;
-        fc::Vector3f reflectDir = incidentDir - 2 * incidentDir.dot(collision.normal) * collision.normal;
+        Vector3f incidentDir = curRay.direction;
+        Vector3f reflectDir = incidentDir - 2 * incidentDir.dot(collision.normal) * collision.normal;
 
         curRay.origin = collision.point + reflectDir * 0.1f;
         curRay.direction = reflectDir;
@@ -51,7 +54,7 @@ void SimulationManager::traceAudioSources (SpatialFramePlayers::Writer &players,
 
 template <RayCaster CollisionFunc>
 void SimulationManager::addContributionsAtPoint (SpatialFramePlayers::Writer &players,
-                                                 const fc::Vector3f &point,
+                                                 const Vector3f &point,
                                                  float pathLength,
                                                  float volume,
                                                  float occlusionFactor,
@@ -59,12 +62,12 @@ void SimulationManager::addContributionsAtPoint (SpatialFramePlayers::Writer &pl
 
     for (const auto &source: audioSources) {
 
-        fc::Vector3f sourcePos(source.position);
+        Vector3f sourcePos(source.position);
 
-        float distanceToSource = fc::distance(point, sourcePos);
+        float distanceToSource = distance(point, sourcePos);
 
-        fc::Vector3f dirToSource = sourcePos - point;
-        fc::RayHit collisionToSource = collisionFunc(fc::Ray{point, dirToSource.normalize()});
+        Vector3f dirToSource = sourcePos - point;
+        RayHit collisionToSource = collisionFunc(Ray{point, dirToSource.normalize()});
 
         bool occluded = collisionToSource.hit && distanceToSource >= collisionToSource.distance;
 
@@ -82,3 +85,6 @@ void SimulationManager::addContributionsAtPoint (SpatialFramePlayers::Writer &pl
         players.addPlayer(info);
     }
 }
+
+
+} // namespace rta

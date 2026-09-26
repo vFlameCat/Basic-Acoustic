@@ -1,6 +1,9 @@
 #include "SPSCQueue.hpp"
 
 
+namespace rta {
+
+
 template <typename T, uint32_t Capacity>
 bool SPSCQueue<T, Capacity>::push (const T& value) {
 
@@ -29,3 +32,6 @@ bool SPSCQueue<T, Capacity>::pop (T& value) {
 
     return true;
 }
+
+
+} // namespace rta

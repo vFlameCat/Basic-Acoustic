@@ -9,6 +9,9 @@
 #include <vector>
 
 
+namespace rta {
+
+
 class SpatialFramePlayers {
 
 public:
@@ -67,3 +70,6 @@ private:
 
     TripleBuffer<std::vector<PlayerCreateInfo>> buf_;
 };
+
+
+} // namespace rta

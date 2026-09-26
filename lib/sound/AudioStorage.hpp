@@ -10,6 +10,9 @@
 #include <memory>
 
 
+namespace rta {
+
+
 class Audio {
 
 public:
@@ -38,7 +41,7 @@ class AudioStorage final {
 
 public:
 
-    using Handle = fc::SlotPool<std::unique_ptr<Audio>>::Handle;
+    using Handle = SlotPool<std::unique_ptr<Audio>>::Handle;
 
 
     AudioStorage () = default;
@@ -58,5 +61,8 @@ private:
 
 private:
 
-    fc::SlotPool<std::unique_ptr<Audio>> storage_{};
+    SlotPool<std::unique_ptr<Audio>> storage_{};
 };
+
+
+} // namespace rta

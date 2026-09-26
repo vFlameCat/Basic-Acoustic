@@ -6,14 +6,18 @@
 #include <SimulationManager.hpp>
 
 
+namespace rta {
+
 class AudioEngine;
+
+} // namespace rta
 
 
 class Game final {
 
 public:
 
-    Game (int screenWidth, int screenHeight, AudioEngine &engine);
+    Game (int screenWidth, int screenHeight, rta::AudioEngine &engine);
 
     Game (const Game&) = delete;
     Game& operator= (const Game&) = delete;
@@ -27,7 +31,7 @@ public:
     Scene scene{};
     Camera camera{};
 
-    SimulationManager simulationManager;
+    rta::SimulationManager simulationManager;
 
 private:
 
@@ -36,7 +40,7 @@ private:
 
 private:
 
-    AudioEngine &engine_;
+    rta::AudioEngine &engine_;
 
     const int screenWidth_, screenHeight_;
 };

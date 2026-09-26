@@ -4,7 +4,7 @@
 #include <Vector3.hpp>
 
 
-namespace fc {
+namespace rta {
 
 
 struct Ray {
@@ -26,4 +26,4 @@ struct RayHit {
 };
 
 
-} // namespace fc
+} // namespace rta

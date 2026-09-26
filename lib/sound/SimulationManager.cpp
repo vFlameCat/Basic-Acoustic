@@ -9,6 +9,9 @@
 #include <cassert>
 
 
+namespace rta {
+
+
 SimulationManager::SimulationManager (AudioEngine &engine):
   SimulationManager(engine, SimulationParams{}) {}
 
@@ -29,11 +32,11 @@ float  SimulationManager::calcVolume (float distance) const {
     return 1.f / std::max(distance, params_.minDistToSource);
 }
 
-std::vector <fc::Vector3f> SimulationManager::genSphereDirections (uint32_t numRays) {
+std::vector <Vector3f> SimulationManager::genSphereDirections (uint32_t numRays) {
 
     assert(numRays > 0);
 
-    std::vector<fc::Vector3f> directions;
+    std::vector<Vector3f> directions;
     directions.reserve(numRays);
 
     float goldenRatio = (1.0f + std::sqrt(5.0f)) / 2.0f;
@@ -43,7 +46,7 @@ std::vector <fc::Vector3f> SimulationManager::genSphereDirections (uint32_t numR
         float theta = 2 * static_cast<float>(std::numbers::pi) * static_cast<float>(i) / goldenRatio;
         float phi = std::acos(1.0f - 2.0f * (static_cast<float>(i) + 0.5f) / static_cast<float>(numRays));
         
-        fc::Vector3f dir (
+        Vector3f dir (
 
             std::cos(theta) * std::sin(phi),
             std::sin(theta) * std::sin(phi),
@@ -55,3 +58,6 @@ std::vector <fc::Vector3f> SimulationManager::genSphereDirections (uint32_t numR
 
     return directions;
 }
+
+
+} // namespace rta

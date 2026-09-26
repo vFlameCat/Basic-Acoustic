@@ -15,6 +15,9 @@
 #include <cstddef>
 
 
+namespace rta {
+
+
 class AudioEngine final {
 
 public:
@@ -72,3 +75,6 @@ private:
     std::atomic<std::chrono::microseconds> lastCallbackDuration_{std::chrono::microseconds{0}};
     std::atomic<std::chrono::microseconds> avgCallbackDuration_ {std::chrono::microseconds{0}};
 };
+
+
+} // namespace rta

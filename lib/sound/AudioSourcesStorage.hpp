@@ -7,11 +7,17 @@
 #include <containers/SlotPool.hpp>
 
 
+namespace rta {
+
+
 struct AudioSource {
 
-    fc::Vector3f position = fc::Vector3f(0.f, 0.f,  0.f);
+    Vector3f position = Vector3f(0.f, 0.f,  0.f);
     PlayersPool::Handle handle = PlayersPool::Handle::Invalid;
 };
 
 
-using AudioSourcesStorage = fc::SlotPool<AudioSource>;
+using AudioSourcesStorage = SlotPool<AudioSource>;
+
+
+} // namespace rta

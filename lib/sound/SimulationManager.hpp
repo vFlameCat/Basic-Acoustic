@@ -11,19 +11,22 @@
 #include <vector>
 
 
+namespace rta {
+
+
 class AudioEngine;
 
 
 struct Listener {
 
-    fc::Vector3f position = fc::Vector3f(0.f, 0.f, 0.f);
+    Vector3f position = Vector3f(0.f, 0.f, 0.f);
 };
 
 
 // Scene query the simulation relies on: returns the closest hit along the ray
 // (the ray direction is normalized).
 template <typename F>
-concept RayCaster = std::is_invocable_r_v<fc::RayHit, F&, const fc::Ray&>;
+concept RayCaster = std::is_invocable_r_v<RayHit, F&, const Ray&>;
 
 
 class SimulationManager final {
@@ -63,11 +66,11 @@ public:
 private:
 
     template <RayCaster CollisionFunc>
-    void traceAudioSources (SpatialFramePlayers::Writer &players, fc::Ray ray, CollisionFunc collisionFunc, uint32_t depth) const;
+    void traceAudioSources (SpatialFramePlayers::Writer &players, Ray ray, CollisionFunc collisionFunc, uint32_t depth) const;
 
     template <RayCaster CollisionFunc>
     void addContributionsAtPoint (SpatialFramePlayers::Writer &players,
-                                  const fc::Vector3f &point,
+                                  const Vector3f &point,
                                   float pathLength,
                                   float volume,
                                   float occlusionFactor,
@@ -76,16 +79,19 @@ private:
     double calcPosOffset (double distance) const;
     float  calcVolume (float distance) const;
 
-    static std::vector <fc::Vector3f> genSphereDirections (uint32_t numRays);
+    static std::vector <Vector3f> genSphereDirections (uint32_t numRays);
 
 private:
 
     AudioEngine &engine_;
     SimulationParams params_;
 
-    std::vector <fc::Vector3f> sphereDirections_;
+    std::vector <Vector3f> sphereDirections_;
     float perRayAmpWeight_;
 };
+
+
+} // namespace rta
 
 
 #include "SimulationManager.inl"

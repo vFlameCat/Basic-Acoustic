@@ -1,6 +1,9 @@
 #include "TripleBuffer.hpp"
 
 
+namespace rta {
+
+
 template <typename T>
 T& TripleBuffer<T>::getWriteBuffer () {
 
@@ -41,3 +44,6 @@ void TripleBuffer<T>::apply (F func) {
         func(buf);
     }
 }
+
+
+} // namespace rta

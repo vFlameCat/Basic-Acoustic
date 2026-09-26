@@ -14,7 +14,7 @@
 
 int main () {
 
-    AudioStorage audioStorage;
+    rta::AudioStorage audioStorage;
 
     std::vector <std::string> soundPaths = {
         APP_RESOURCES_ROOT "7NA.mp3",
@@ -22,13 +22,13 @@ int main () {
         APP_RESOURCES_ROOT "magister.mp3",
     };
 
-    std::vector <AudioStorage::Handle> audio;
+    std::vector <rta::AudioStorage::Handle> audio;
     for (const auto& soundPath: soundPaths) {
 
         audio.push_back(audioStorage.load(soundPath));
     }
 
-    AudioEngine engine;
+    rta::AudioEngine engine;
 
     Game game(1280, 720, engine);
 
@@ -135,19 +135,19 @@ int main () {
     }
 
 
-    PlayersPool::Writer poolWriter = engine.getPlayersPool().getWriter();
-    std::vector <PlayersPool::Handle> playerHandles;
+    rta::PlayersPool::Writer poolWriter = engine.getPlayersPool().getWriter();
+    std::vector <rta::PlayersPool::Handle> playerHandles;
     for (auto audioHandle: audio) {
 
-        PlayersPool::Handle handle = poolWriter.addPlayer(Player::CreateInfo{.volume = 0.f, .audio = audioStorage.get(audioHandle)});
+        rta::PlayersPool::Handle handle = poolWriter.addPlayer(rta::Player::CreateInfo{.volume = 0.f, .audio = audioStorage.get(audioHandle)});
         playerHandles.push_back(handle);
     }
 
     for (size_t i = 0; i < audio.size(); ++i) {
 
-        game.simulationManager.audioSources.insert(AudioSource{fromRl(spheres[i].center), playerHandles[i]});
+        game.simulationManager.audioSources.insert(rta::AudioSource{fromRl(spheres[i].center), playerHandles[i]});
     }
-    game.simulationManager.audioSources.insert(AudioSource{fromRl(spheres[3].center), playerHandles[0]});
+    game.simulationManager.audioSources.insert(rta::AudioSource{fromRl(spheres[3].center), playerHandles[0]});
 
 
 

@@ -5,6 +5,9 @@
 #include <cstdint>
 
 
+namespace rta {
+
+
 template <typename T>
 class TripleBuffer {
 
@@ -36,6 +39,9 @@ private:
     // bits [2:1] = middleIdx, bit [0] = dirty
     std::atomic<uint32_t> middle_{1u << 1};
 };
+
+
+} // namespace rta
 
 
 #include "TripleBuffer.inl"
