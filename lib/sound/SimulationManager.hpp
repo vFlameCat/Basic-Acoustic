@@ -3,10 +3,12 @@
 
 #include <AudioSourcesStorage.hpp>
 #include <Players/SpatialFramePlayers.hpp>
+#include <Ray.hpp>
 #include <Vector3.hpp>
-#include <cstdint>
 
-#include "raylib.h"
+#include <cstdint>
+#include <type_traits>
+#include <vector>
 
 
 class AudioEngine;
@@ -16,6 +18,12 @@ struct Listener {
 
     fc::Vector3f position = fc::Vector3f(0.f, 0.f, 0.f);
 };
+
+
+// Scene query the simulation relies on: returns the closest hit along the ray
+// (the ray direction is normalized).
+template <typename F>
+concept RayCaster = std::is_invocable_r_v<fc::RayHit, F&, const fc::Ray&>;
 
 
 class SimulationManager final {
@@ -44,7 +52,7 @@ public:
     SimulationManager (const SimulationManager&) = delete;
     SimulationManager& operator= (const SimulationManager&) = delete;
 
-    template <typename CollisionFunc>
+    template <RayCaster CollisionFunc>
     void listenAroundCam (CollisionFunc collisionFunc) const;
 
 public:
@@ -54,10 +62,10 @@ public:
 
 private:
 
-    template <typename CollisionFunc>
-    void traceAudioSources (SpatialFramePlayers::Writer &players, Ray ray, CollisionFunc collisionFunc, uint32_t depth) const;
+    template <RayCaster CollisionFunc>
+    void traceAudioSources (SpatialFramePlayers::Writer &players, fc::Ray ray, CollisionFunc collisionFunc, uint32_t depth) const;
 
-    template <typename CollisionFunc>
+    template <RayCaster CollisionFunc>
     void addContributionsAtPoint (SpatialFramePlayers::Writer &players,
                                   const fc::Vector3f &point,
                                   float pathLength,
@@ -68,14 +76,14 @@ private:
     double calcPosOffset (double distance) const;
     float  calcVolume (float distance) const;
 
-    static std::vector <Ray> genRaysSphere (uint32_t numRays);
+    static std::vector <fc::Vector3f> genSphereDirections (uint32_t numRays);
 
 private:
 
     AudioEngine &engine_;
     SimulationParams params_;
 
-    std::vector <Ray> raysSphere_;
+    std::vector <fc::Vector3f> sphereDirections_;
     float perRayAmpWeight_;
 };
 

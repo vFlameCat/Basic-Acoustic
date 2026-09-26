@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <cassert>
+#include <type_traits>
 
 
 namespace fc {
@@ -71,19 +72,6 @@ constexpr Vector3<T> Vector3<T>::componentWiseDiv (const Vector3 &rhs) const {
 
     return Vector3<T>(x / rhs.x, y / rhs.y, z / rhs.z);
 }
-
-// compatibility with raylib methods start
-
-template <>
-constexpr Vector3f::Vector3 (::Vector3 vec): x(vec.x), y(vec.y), z(vec.z) {}
-
-template <>
-constexpr Vector3f::operator ::Vector3 () const {
-
-    return ::Vector3(x, y, z);
-}
-
-// compatibility with raylib methods end
 
 
 template <typename T>

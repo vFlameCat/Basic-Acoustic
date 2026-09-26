@@ -1,9 +1,6 @@
 #pragma once
 
 
-#include <raylib.h>
-
-
 namespace fc {
 
 
@@ -28,10 +25,6 @@ public:
 
     constexpr Vector3 componentWiseMul (const Vector3 &rhs) const;
     constexpr Vector3 componentWiseDiv (const Vector3 &rhs) const;
-
-    // compatibility with raylib methods
-    constexpr Vector3 (::Vector3 vec);
-    constexpr operator ::Vector3 () const;
 
 public:
 

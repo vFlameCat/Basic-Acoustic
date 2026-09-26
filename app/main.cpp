@@ -5,6 +5,7 @@
 #include <SimulationManager.hpp>
 #include <Players/PlayersPool.hpp>
 #include <Players/SpatialFramePlayers.hpp>
+#include <RaylibInterop.hpp>
 
 #include <raylib.h>
 
@@ -144,9 +145,9 @@ int main () {
 
     for (size_t i = 0; i < audio.size(); ++i) {
 
-        game.simulationManager.audioSources.insert(AudioSource{spheres[i].center, playerHandles[i]});
+        game.simulationManager.audioSources.insert(AudioSource{fromRl(spheres[i].center), playerHandles[i]});
     }
-    game.simulationManager.audioSources.insert(AudioSource{spheres[3].center, playerHandles[0]});
+    game.simulationManager.audioSources.insert(AudioSource{fromRl(spheres[3].center), playerHandles[0]});
 
 
 
