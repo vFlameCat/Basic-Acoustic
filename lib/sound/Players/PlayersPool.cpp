@@ -40,8 +40,8 @@ PlayersPool::Reader::Reader (PlayersPool &pool):
         std::visit(overloads {
 
             [](std::monostate) {},
-            [this](Command::Add    &cmd) { parseCommandAdd(cmd); },
-            [this](Command::Remove &cmd) { parseCommandRemove(cmd); },
+            [this](Command::Add    &addCmd)    { parseCommandAdd(addCmd); },
+            [this](Command::Remove &removeCmd) { parseCommandRemove(removeCmd); },
         }, cmd.data);
     }
 }

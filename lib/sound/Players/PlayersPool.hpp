@@ -32,7 +32,7 @@ private:
             Handle handle;
         };
 
-        std::variant<std::monostate, Add, Remove> data;
+        std::variant<std::monostate, Add, Remove> data{};
     };
 
 public:
@@ -88,10 +88,10 @@ private:
     // Main thread allocates handles via mainHandles_; the audio thread mirrors
     // the same insert/erase sequence on players_, so handles stay consistent.
     // Both pools share Tag = Player so their Handle types are identical.
-    SlotPool<std::monostate, Player> mainHandles_;
-    SlotPool<Player>                 players_;
+    SlotPool<std::monostate, Player> mainHandles_{};
+    SlotPool<Player>                 players_{};
 
-    SPSCQueue<Command, 1024> cmdQueue_;
+    SPSCQueue<Command, 1024> cmdQueue_{};
 };
 
 

@@ -20,7 +20,7 @@ AudioEngine::~AudioEngine () {
 }
 
 
-void AudioEngine::callback (ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount) {
+void AudioEngine::callback (ma_device* pDevice, void* pOutput, [[maybe_unused]] const void* pInput, ma_uint32 frameCount) {
 
     auto start = std::chrono::high_resolution_clock::now();
 
