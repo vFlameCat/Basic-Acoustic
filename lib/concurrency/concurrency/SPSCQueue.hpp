@@ -5,6 +5,9 @@
 #include <array>
 
 
+namespace rta {
+
+
 template <typename T, uint32_t Capacity>
 class SPSCQueue {
 
@@ -27,6 +30,9 @@ private:
     std::atomic<uint32_t> head_{0};
     std::atomic<uint32_t> tail_{0};
 };
+
+
+} // namespace rta
 
 
 #include "SPSCQueue.inl"

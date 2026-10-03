@@ -9,6 +9,9 @@
 #include <vector>
 
 
+namespace rta {
+
+
 class SpatialFramePlayers {
 
 public:
@@ -63,7 +66,10 @@ public:
 
 private:
 
-    std::vector<Player> players_;
+    std::vector<Player> players_{};
 
-    TripleBuffer<std::vector<PlayerCreateInfo>> buf_;
+    TripleBuffer<std::vector<PlayerCreateInfo>> buf_{};
 };
+
+
+} // namespace rta

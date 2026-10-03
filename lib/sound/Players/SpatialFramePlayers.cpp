@@ -4,6 +4,9 @@
 #include <vector>
 
 
+namespace rta {
+
+
 SpatialFramePlayers::Writer::Writer (SpatialFramePlayers &players):
   players_(players), writeBuf_(players.buf_.getWriteBuffer()) {
 
@@ -31,7 +34,7 @@ void SpatialFramePlayers::Reader::buildPlayers (const PlayersPool::Reader &poolR
     if (!isNewPlayers_)
         return;
 
-    fc::SlotPool<Player> &pool = poolReader.getPlayers();
+    SlotPool<Player> &pool = poolReader.getPlayers();
 
     players_.players_.clear();
     std::vector<PlayerCreateInfo> &playersInfo = players_.buf_.getReadBuffer();
@@ -73,3 +76,6 @@ SpatialFramePlayers::Reader SpatialFramePlayers::getReader () {
 
     return Reader(*this);
 }
+
+
+} // namespace rta

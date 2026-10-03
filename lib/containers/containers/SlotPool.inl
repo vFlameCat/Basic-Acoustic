@@ -4,7 +4,7 @@
 #include <utility>
 
 
-namespace fc {
+namespace rta {
 
 
 template <typename T, typename Tag>
@@ -126,4 +126,4 @@ bool SlotPool<T, Tag>::empty () const {
 }
 
 
-} // namespace fc
+} // namespace rta

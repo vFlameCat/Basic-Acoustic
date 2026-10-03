@@ -6,6 +6,9 @@
 #include <vector>
 
 
+namespace rta {
+
+
 Audio::Audio (std::vector <float> &&samples):
     samples_(std::move(samples)) {}
 
@@ -81,3 +84,6 @@ int AudioStorage::decodeAndLoadFloatSamples (const std::string &samplePath, std:
 
     return 0;
 }
+
+
+} // namespace rta

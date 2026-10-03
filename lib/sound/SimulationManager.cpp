@@ -1,11 +1,15 @@
 #include "SimulationManager.hpp"
 
 #include <Vector3.hpp>
+#include <algorithm>
 #include <cmath>
 #include <numbers>
 #include <AudioEngine.hpp>
 #include <vector>
 #include <cassert>
+
+
+namespace rta {
 
 
 SimulationManager::SimulationManager (AudioEngine &engine):
@@ -14,7 +18,7 @@ SimulationManager::SimulationManager (AudioEngine &engine):
 SimulationManager::SimulationManager (AudioEngine &engine, SimulationParams params):
   engine_(engine),
   params_(params),
-  raysSphere_(genRaysSphere(params.numRays)),
+  sphereDirections_(genSphereDirections(params.numRays)),
   perRayAmpWeight_(1.f / std::sqrt(static_cast<float>(params.numRays))) {}
 
 
@@ -28,12 +32,12 @@ float  SimulationManager::calcVolume (float distance) const {
     return 1.f / std::max(distance, params_.minDistToSource);
 }
 
-std::vector <Ray> SimulationManager::genRaysSphere (uint32_t numRays) {
+std::vector <Vector3f> SimulationManager::genSphereDirections (uint32_t numRays) {
 
     assert(numRays > 0);
 
-    std::vector<Ray> rays;
-    rays.reserve(numRays);
+    std::vector<Vector3f> directions;
+    directions.reserve(numRays);
 
     float goldenRatio = (1.0f + std::sqrt(5.0f)) / 2.0f;
 
@@ -42,15 +46,18 @@ std::vector <Ray> SimulationManager::genRaysSphere (uint32_t numRays) {
         float theta = 2 * static_cast<float>(std::numbers::pi) * static_cast<float>(i) / goldenRatio;
         float phi = std::acos(1.0f - 2.0f * (static_cast<float>(i) + 0.5f) / static_cast<float>(numRays));
         
-        fc::Vector3f dir (
+        Vector3f dir (
 
             std::cos(theta) * std::sin(phi),
             std::sin(theta) * std::sin(phi),
             std::cos(phi)
         );
 
-        rays.emplace_back(Ray{fc::Vector3f(0.f, 0.f, 0.f), dir});
+        directions.push_back(dir);
     }
 
-    return rays;
+    return directions;
 }
+
+
+} // namespace rta

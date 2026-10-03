@@ -6,7 +6,7 @@
 #include <cstddef>
 
 
-namespace fc {
+namespace rta {
 
 
 // Tag-scoped generational handle. Handles with different Tag are distinct
@@ -105,7 +105,7 @@ private:
 };
 
 
-} // namespace fc
+} // namespace rta
 
 
 #include "SlotPool.inl"

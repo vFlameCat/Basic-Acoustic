@@ -1,3 +1,3 @@
-add_library(concurrency INTERFACE)
+add_library(rta_concurrency INTERFACE)
 
-target_include_directories(concurrency INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(rta_concurrency INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})

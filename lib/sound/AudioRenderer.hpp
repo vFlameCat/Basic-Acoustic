@@ -10,6 +10,9 @@
 #include <containers/SlotPool.hpp>
 
 
+namespace rta {
+
+
 class AudioRenderer final {
 
 public:
@@ -25,8 +28,8 @@ public:
 
 private:
 
-    void mixPlayers (float *pOutput, uint32_t frameCount, fc::SlotPool<Player> &poolPlayers, std::vector<Player> &framePlayers);
-    void mixPlayersWithoutAdvance (float *pOutput, uint32_t frameCount, fc::SlotPool<Player> &poolPlayers, std::vector<Player> &framePlayers);
+    void mixPlayers (float *pOutput, uint32_t frameCount, SlotPool<Player> &poolPlayers, std::vector<Player> &framePlayers);
+    void mixPlayersWithoutAdvance (float *pOutput, uint32_t frameCount, SlotPool<Player> &poolPlayers, std::vector<Player> &framePlayers);
 
     template <typename Container>
     void mix (float *pOutput, uint32_t frameCount, Container &players);
@@ -37,3 +40,6 @@ private:
     static constexpr uint32_t INITIAL_OVERLAP_BUF_SIZE = 1024;
     std::vector<float> overlapBuf_;
 };
+
+
+} // namespace rta

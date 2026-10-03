@@ -1,12 +1,13 @@
 #include "Game.hpp"
 #include "SimulationManager.hpp"
 #include "AudioEngine.hpp"
+#include "RaylibInterop.hpp"
 
 #include <rlImGui.h>
 #include <imgui.h>
 
 
-Game::Game (int screenWidth, int screenHeight, AudioEngine &engine):
+Game::Game (int screenWidth, int screenHeight, rta::AudioEngine &engine):
   simulationManager(engine),
   engine_(engine),
   screenWidth_(screenWidth),
@@ -50,8 +51,8 @@ void Game::run () {
             UpdateCamera(&camera, CAMERA_FREE);
         }
 
-        simulationManager.listener.position = camera.position;
-        simulationManager.listenAroundCam([&scene = this->scene](Ray ray) { return scene.getRayCollisionBoxes(ray); });
+        simulationManager.listener.position = fromRl(camera.position);
+        simulationManager.listenAroundCam([&scene = this->scene](const rta::Ray &ray) { return fromRl(scene.getRayCollisionBoxes(toRl(ray))); });
 
         drawScene();
     }

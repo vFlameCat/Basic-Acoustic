@@ -4,6 +4,9 @@
 #include <AudioStorage.hpp>
 
 
+namespace rta {
+
+
 class Player final {
 
 public:
@@ -47,6 +50,9 @@ private:
 
     bool isLooped_;
 };
+
+
+} // namespace rta
 
 
 #include "Player.inl"

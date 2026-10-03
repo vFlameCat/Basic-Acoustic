@@ -1,5 +1,3 @@
-cmake_minimum_required(VERSION 3.30)
-
 # raylib
 CPMAddPackage(
   NAME raylib
@@ -13,14 +11,9 @@ CPMAddPackage(
 
 if(raylib_ADDED AND TARGET raylib)
 
-  target_compile_options(raylib PRIVATE
-    -Wno-unused-parameter
-    -Wno-unused-result
-    -Wno-implicit-fallthrough
-    -Wno-stringop-overflow
-    -Wno-stringop-truncation
-    -Wno-sign-compare
-  )
+  # Third-party code: silence its warnings (the GCC-only -Wno-* list broke MSVC builds).
+  # -w is understood by GCC, Clang and MSVC alike.
+  target_compile_options(raylib PRIVATE -w)
 
 endif()
 
@@ -44,7 +37,7 @@ if(imgui_ADDED)
   )
 
   # SYSTEM include silences the project's strict warnings inside imgui headers
-  # for downstream consumers (game, app); PRIVATE -w silences them in imgui's TU.
+  # for downstream consumers (app); PRIVATE -w silences them in imgui's TU.
   target_include_directories(imgui SYSTEM PUBLIC ${imgui_SOURCE_DIR})
 
   target_compile_options(imgui PRIVATE -w)

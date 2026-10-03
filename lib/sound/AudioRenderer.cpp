@@ -8,6 +8,9 @@
 #include <vector>
 
 
+namespace rta {
+
+
 AudioRenderer::AudioRenderer ():
   overlapBuf_(INITIAL_OVERLAP_BUF_SIZE, 0.f) {}
 
@@ -20,8 +23,8 @@ void AudioRenderer::renderAudio (float *pOutput, uint32_t frameCount) {
     PlayersPool::Reader poolReader  = playersPool.getReader();
     spatialReader.buildPlayers(poolReader);
 
-    fc::SlotPool<Player> &poolPlayers  = poolReader.getPlayers();
-    std::vector<Player>  &spatialPlayers = spatialReader.getPlayers();
+    SlotPool<Player>    &poolPlayers    = poolReader.getPlayers();
+    std::vector<Player> &spatialPlayers = spatialReader.getPlayers();
 
     mixPlayers(pOutput, frameCount, poolPlayers, spatialPlayers);
 
@@ -49,7 +52,7 @@ void AudioRenderer::renderAudio (float *pOutput, uint32_t frameCount) {
     }
 }
 
-void AudioRenderer::mixPlayers (float *pOutput, uint32_t frameCount, fc::SlotPool<Player> &poolPlayers, std::vector<Player> &spatialPlayers) {
+void AudioRenderer::mixPlayers (float *pOutput, uint32_t frameCount, SlotPool<Player> &poolPlayers, std::vector<Player> &spatialPlayers) {
 
     std::fill_n(pOutput, frameCount, 0.f);
 
@@ -70,7 +73,7 @@ void AudioRenderer::mix (float *pOutput, uint32_t frameCount, Container &players
     }
 }
 
-void AudioRenderer::mixPlayersWithoutAdvance (float *pOutput, uint32_t frameCount, fc::SlotPool<Player> &poolPlayers, std::vector<Player> &spatialPlayers) {
+void AudioRenderer::mixPlayersWithoutAdvance (float *pOutput, uint32_t frameCount, SlotPool<Player> &poolPlayers, std::vector<Player> &spatialPlayers) {
 
     std::fill_n(pOutput, frameCount, 0.f);
 
@@ -92,3 +95,6 @@ void AudioRenderer::mixWithoutAdvance (float *pOutput, uint32_t frameCount, Cont
         player.pos_ = originalPos;
     }
 }
+
+
+} // namespace rta

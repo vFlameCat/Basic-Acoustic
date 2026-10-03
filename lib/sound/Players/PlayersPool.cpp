@@ -4,6 +4,9 @@
 #include <cassert>
 
 
+namespace rta {
+
+
 PlayersPool::Writer::Writer (PlayersPool &pool):
   pool_(pool) {}
 
@@ -37,8 +40,8 @@ PlayersPool::Reader::Reader (PlayersPool &pool):
         std::visit(overloads {
 
             [](std::monostate) {},
-            [this](Command::Add    &cmd) { parseCommandAdd(cmd); },
-            [this](Command::Remove &cmd) { parseCommandRemove(cmd); },
+            [this](Command::Add    &addCmd)    { parseCommandAdd(addCmd); },
+            [this](Command::Remove &removeCmd) { parseCommandRemove(removeCmd); },
         }, cmd.data);
     }
 }
@@ -48,7 +51,7 @@ Player::CreateInfo PlayersPool::Reader::getPlayerCreateInfo (Handle handle) cons
     return pool_.players_.get(handle).getInfo();
 }
 
-fc::SlotPool<Player>& PlayersPool::Reader::getPlayers () const {
+SlotPool<Player>& PlayersPool::Reader::getPlayers () const {
 
     return pool_.players_;
 }
@@ -86,3 +89,6 @@ PlayersPool::Reader PlayersPool::getReader () {
 
     return Reader(*this);
 }
+
+
+} // namespace rta
