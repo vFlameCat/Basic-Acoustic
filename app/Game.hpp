@@ -2,7 +2,7 @@
 
 
 #include <raylib.h>
-#include <Scene.hpp>
+#include "Scene.hpp"
 #include <SimulationManager.hpp>
 
 
