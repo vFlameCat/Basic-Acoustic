@@ -27,6 +27,10 @@ endif()
 # so a parent project gets just the library and nothing is downloaded.
 option(RTA_BUILD_DEMO "Build the raylib demo application" ${PROJECT_IS_TOP_LEVEL})
 
+# The library has its own warnings-as-errors switch; a parent project's
+# CMAKE_COMPILE_WARNING_AS_ERROR does not apply to Basic-Acoustic targets.
+option(RTA_WARNINGS_AS_ERRORS "Treat warnings in Basic-Acoustic code as errors" OFF)
+
 
 include("cmake/RtaCompileOptions.cmake")
 

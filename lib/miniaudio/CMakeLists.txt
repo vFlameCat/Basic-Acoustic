@@ -1,7 +1,8 @@
 add_library(rta_miniaudio STATIC miniaudio.cpp)
 
-# Third-party code: keep its warnings out of our builds
+# Third-party code: keep its warnings out of our builds (and out of a parent's warnings-as-errors)
 target_compile_options(rta_miniaudio PRIVATE $<IF:$<CXX_COMPILER_ID:MSVC>,/w,-w>)
+set_target_properties(rta_miniaudio PROPERTIES COMPILE_WARNING_AS_ERROR OFF)
 
 target_include_directories(rta_miniaudio SYSTEM PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
